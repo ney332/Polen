@@ -18,4 +18,8 @@ actor DefaultBookClubRepository: BookClubRepository {
     func joinClub(inviteCode: String, userID: UUID) async throws -> BookClub {
         try await cloudKitStore.joinClub(inviteCode: inviteCode, userID: userID)
     }
+
+    func leaveClub(userID: UUID) async throws {
+        try await cloudKitStore.leaveClub(userID: userID)
+    }
 }

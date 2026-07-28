@@ -2,13 +2,17 @@ import SwiftUI
 
 struct ClubCommentsPreviewView: View {
     let commentState: CommentTimelineState
+    let replyStates: [UUID: ReplyThreadState]
     let currentUserID: UUID?
     @Binding var newCommentBody: String
     @Binding var newCommentPageText: String
+    @Binding var replyDrafts: [UUID: String]
     let currentPage: Int
     let createAction: () async -> Void
     let updateAction: (Comment, String) async -> Void
     let deleteAction: (Comment) async -> Void
+    let toggleRepliesAction: (Comment) async -> Void
+    let createReplyAction: (Comment) async -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: PollenSpacing.medium) {
@@ -56,15 +60,34 @@ struct ClubCommentsPreviewView: View {
                     CommentTimelineRowView(
                         comment: comment,
                         canEdit: comment.authorID == currentUserID,
+                        replyState: replyStates[comment.id] ?? .collapsed,
+                        replyDraft: replyDraftBinding(for: comment.id),
                         updateAction: { body in
                             await updateAction(comment, body)
                         },
                         deleteAction: {
                             await deleteAction(comment)
+                        },
+                        toggleRepliesAction: {
+                            await toggleRepliesAction(comment)
+                        },
+                        createReplyAction: {
+                            await createReplyAction(comment)
                         }
                     )
                 }
             }
         }
+    }
+
+    private func replyDraftBinding(for commentID: UUID) -> Binding<String> {
+        Binding(
+            get: {
+                replyDrafts[commentID] ?? ""
+            },
+            set: { newValue in
+                replyDrafts[commentID] = newValue
+            }
+        )
     }
 }

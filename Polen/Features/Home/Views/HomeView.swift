@@ -44,13 +44,17 @@ struct HomeView: View {
                 ClubHomeView(
                     summary: summary,
                     commentState: viewModel.commentState,
+                    replyStates: viewModel.replyStates,
                     currentUserID: viewModel.currentUserID,
                     newCommentBody: $viewModel.newCommentBody,
                     newCommentPageText: $viewModel.newCommentPageText,
+                    replyDrafts: $viewModel.replyDrafts,
                     updateProgressAction: viewModel.updateReadingProgress,
                     createCommentAction: viewModel.createComment,
                     updateCommentAction: viewModel.updateComment,
-                    deleteCommentAction: viewModel.deleteComment
+                    deleteCommentAction: viewModel.deleteComment,
+                    toggleRepliesAction: viewModel.toggleReplies,
+                    createReplyAction: viewModel.createReply
                 )
             }
         case .failed(let message):

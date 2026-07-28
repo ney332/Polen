@@ -5,6 +5,7 @@ protocol CloudKitBookClubStoring: Sendable {
     func currentClub(for userID: UUID) async throws -> BookClub?
     func createClub(_ club: BookClub, book: Book, ownerID: UUID) async throws
     func joinClub(inviteCode: String, userID: UUID) async throws -> BookClub
+    func leaveClub(userID: UUID) async throws
 }
 
 actor CloudKitBookClubStore: CloudKitBookClubStoring {
@@ -72,6 +73,15 @@ actor CloudKitBookClubStore: CloudKitBookClubStoring {
         return club
     }
 
+    func leaveClub(userID: UUID) async throws {
+        guard let membership = try await membership(for: userID) else {
+            return
+        }
+
+        _ = try await publicDatabase.deleteRecord(withID: CKRecord.ID(recordName: membership.id))
+        try await deleteReadingProgress(userID: userID, clubID: membership.clubID)
+    }
+
     private func membership(for userID: UUID) async throws -> Membership? {
         let predicate = NSPredicate(format: "%K == %@", CloudKitField.Membership.userID, userID.uuidString)
         let query = CKQuery(recordType: CloudKitRecordType.membership, predicate: predicate)
@@ -98,6 +108,32 @@ actor CloudKitBookClubStore: CloudKitBookClubStoring {
         let recordID = CKRecord.ID(recordName: id)
         let record = try await publicDatabase.record(for: recordID)
         return try BookClub(record: record)
+    }
+
+    private func deleteReadingProgress(userID: UUID, clubID: UUID) async throws {
+        let predicate = NSPredicate(
+            format: "%K == %@ AND %K == %@",
+            CloudKitField.ReadingProgress.userID,
+            userID.uuidString,
+            CloudKitField.ReadingProgress.clubID,
+            clubID.uuidString
+        )
+        let query = CKQuery(recordType: CloudKitRecordType.readingProgress, predicate: predicate)
+        let records: [CKRecord]
+
+        do {
+            records = try await queryRecords(matching: query, in: privateDatabase, limit: 10)
+        } catch {
+            if error.isMissingCloudKitRecordType {
+                return
+            }
+
+            throw error
+        }
+
+        for record in records {
+            _ = try await privateDatabase.deleteRecord(withID: record.recordID)
+        }
     }
 
     private func queryRecords(matching query: CKQuery, in database: CKDatabase, limit: Int) async throws -> [CKRecord] {

@@ -36,14 +36,19 @@ actor AppleAuthenticationRepository: AuthenticationRepository {
 
         let existingProfile = try await sessionStore.loadUserProfile()
         let displayName = credential.displayName.isEmpty
-            ? existingProfile?.displayName ?? "Leitor"
+            ? existingProfile?.displayName ?? credential.email?.trimmed ?? "Leitor"
             : credential.displayName
+        let stableUserID = StableUserIdentifierFactory.makeID(
+            from: credential.userIdentifier
+        )
 
         let profile = UserProfile(
-            id: existingProfile?.id ?? UUID(),
+            id: stableUserID,
             appleUserIdentifier: credential.userIdentifier,
             displayName: displayName,
             avatarAssetName: existingProfile?.avatarAssetName,
+            avatarImageData: existingProfile?.avatarImageData,
+            biography: existingProfile?.biography,
             createdAt: existingProfile?.createdAt ?? .now
         )
 

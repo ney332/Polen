@@ -12,7 +12,11 @@ struct AppDependencyContainer {
     let clubHomeRepository: ClubHomeRepository
     let readingProgressRepository: ReadingProgressRepository
     let commentRepository: CommentRepository
+    let clubInviteShareStore: CloudKitClubInviteShareStore
+    let userSettingsRepository: UserSettingsRepository
+    let userProfileRepository: UserProfileRepository
     let signInUseCase: SignInUseCase
+    let homeViewModel: HomeViewModel
 
     static func live() -> AppDependencyContainer {
         let swiftDataContainer = SwiftDataContainer.makeLive()
@@ -32,11 +36,24 @@ struct AppDependencyContainer {
         let commentRepository = DefaultCommentRepository(
             cloudKitStore: CloudKitCommentStore(containerProvider: cloudKitProvider)
         )
+        let clubInviteShareStore = CloudKitClubInviteShareStore(containerProvider: cloudKitProvider)
+        let userSettingsRepository = UserDefaultsUserSettingsRepository()
+        let userProfileRepository = DefaultUserProfileRepository(
+            cloudKitStore: CloudKitUserProfileStore(containerProvider: cloudKitProvider)
+        )
         let appState = AppState(authenticationRepository: authenticationRepository)
+        let router = AppRouter()
+        let homeViewModel = HomeViewModel(
+            appState: appState,
+            router: router,
+            clubHomeRepository: clubHomeRepository,
+            readingProgressRepository: readingProgressRepository,
+            commentRepository: commentRepository
+        )
 
         return AppDependencyContainer(
             appState: appState,
-            router: AppRouter(),
+            router: router,
             swiftDataContainer: swiftDataContainer,
             cloudKitContainerProvider: cloudKitProvider,
             authenticationRepository: authenticationRepository,
@@ -45,7 +62,11 @@ struct AppDependencyContainer {
             clubHomeRepository: clubHomeRepository,
             readingProgressRepository: readingProgressRepository,
             commentRepository: commentRepository,
-            signInUseCase: SignInUseCase(authenticationRepository: authenticationRepository)
+            clubInviteShareStore: clubInviteShareStore,
+            userSettingsRepository: userSettingsRepository,
+            userProfileRepository: userProfileRepository,
+            signInUseCase: SignInUseCase(authenticationRepository: authenticationRepository),
+            homeViewModel: homeViewModel
         )
     }
 }

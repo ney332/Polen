@@ -1,27 +1,67 @@
+import PhotosUI
 import SwiftUI
 
 struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
+    @State private var isEditingProfile = false
 
     var body: some View {
         List {
             Section {
-                VStack(alignment: .leading, spacing: PollenSpacing.small) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 56))
-                        .foregroundStyle(PollenColors.primary)
-
-                    Text(viewModel.displayName)
-                        .font(PollenTypography.headline)
-                }
-                .padding(.vertical, PollenSpacing.small)
+                ProfileHeaderView(
+                    displayName: viewModel.displayName,
+                    createdAtText: viewModel.createdAtText,
+                    avatarName: viewModel.selectedAvatarName,
+                    avatarImageData: viewModel.avatarImageData,
+                    biography: viewModel.summary?.user.biography ?? viewModel.biographyDraft,
+                    editAction: {
+                        isEditingProfile = true
+                    }
+                )
             }
 
-            Section {
+            Section("Meu clube") {
+                if let clubSummary = viewModel.summary?.clubSummary {
+                    NavigationLink {
+                        ClubDetailsView(
+                            summary: clubSummary,
+                            isLeavingClub: viewModel.isLeavingClub,
+                            clubInviteShareStore: viewModel.clubInviteShareStore,
+                            leaveClubAction: viewModel.leaveClub
+                        )
+                    } label: {
+                        ProfileClubSummaryView(summary: clubSummary)
+                    }
+                } else {
+                    ProfileClubSummaryView(summary: viewModel.summary?.clubSummary)
+                }
+            }
+
+            Section("Progresso da leitura") {
+                ProfileReadingProgressView(summary: viewModel.summary?.clubSummary)
+            }
+
+            Section("Preferências") {
                 Toggle("Notificações", isOn: $viewModel.notificationsEnabled)
-                Label("Meu clube", systemImage: "person.2")
-                Label("Progresso da leitura", systemImage: "bookmark")
-                Label("Política e Privacidade", systemImage: "lock.shield")
+                    .onChange(of: viewModel.notificationsEnabled) {
+                        Task {
+                            await viewModel.saveNotificationPreference()
+                        }
+                    }
+
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
+                    Label("Política e Privacidade", systemImage: "lock.shield")
+                }
+            }
+
+            if let errorMessage = viewModel.errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .font(PollenTypography.caption)
+                        .foregroundStyle(.red)
+                }
             }
 
             Section {
@@ -33,5 +73,28 @@ struct ProfileView: View {
             }
         }
         .navigationTitle("Perfil")
+        .task {
+            await viewModel.load()
+        }
+        .sheet(isPresented: $isEditingProfile) {
+            ProfileEditorView(
+                displayName: $viewModel.displayNameDraft,
+                biography: $viewModel.biographyDraft,
+                isSaving: viewModel.isSavingProfile,
+                saveAction: viewModel.saveProfile,
+                photoAction: loadPhoto,
+                dismissAction: {
+                    isEditingProfile = false
+                }
+            )
+        }
+    }
+
+    private func loadPhoto(_ item: PhotosPickerItem?) async {
+        guard let data = try? await item?.loadTransferable(type: Data.self) else {
+            return
+        }
+
+        await viewModel.updateAvatarImageData(data)
     }
 }

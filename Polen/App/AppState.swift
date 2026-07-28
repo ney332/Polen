@@ -7,8 +7,11 @@ final class AppState {
     var sessionState: SessionState = .launching
     var currentUser: UserProfile?
     var currentClubID: UUID?
+    var currentClubSummary: HomeClubSummary?
     var readingProgress: ReadingProgress?
     var settings: UserSettings = .default
+    var pendingInviteCode: String?
+    var shareInviteErrorMessage: String?
 
     private let authenticationRepository: AuthenticationRepository
 
@@ -30,15 +33,47 @@ final class AppState {
         sessionState = .signedIn
     }
 
+    func storePendingInviteCode(_ inviteCode: String) {
+        pendingInviteCode = inviteCode
+        shareInviteErrorMessage = nil
+    }
+
+    func consumePendingInviteCode() -> String? {
+        defer {
+            pendingInviteCode = nil
+        }
+
+        return pendingInviteCode
+    }
+
+    func storeShareInviteError(_ message: String) {
+        shareInviteErrorMessage = message
+    }
+
     func enterClub(id clubID: UUID) {
+        if currentClubID != clubID {
+            currentClubSummary = nil
+        }
+
         currentClubID = clubID
+    }
+
+    func updateClubSummary(_ summary: HomeClubSummary) {
+        currentClubID = summary.id
+        currentClubSummary = summary
+        readingProgress = summary.readingProgress
+    }
+
+    func clearClub() {
+        currentClubID = nil
+        currentClubSummary = nil
+        readingProgress = nil
     }
 
     func signOut() async {
         await authenticationRepository.signOut()
         currentUser = nil
-        currentClubID = nil
-        readingProgress = nil
+        clearClub()
         sessionState = .signedOut
     }
 }

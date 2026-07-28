@@ -3,13 +3,17 @@ import SwiftUI
 struct ClubHomeView: View {
     let summary: HomeClubSummary
     let commentState: CommentTimelineState
+    let replyStates: [UUID: ReplyThreadState]
     let currentUserID: UUID?
     @Binding var newCommentBody: String
     @Binding var newCommentPageText: String
+    @Binding var replyDrafts: [UUID: String]
     let updateProgressAction: (Int) async -> Void
     let createCommentAction: () async -> Void
     let updateCommentAction: (Comment, String) async -> Void
     let deleteCommentAction: (Comment) async -> Void
+    let toggleRepliesAction: (Comment) async -> Void
+    let createReplyAction: (Comment) async -> Void
 
     var body: some View {
         ScrollView {
@@ -27,13 +31,17 @@ struct ClubHomeView: View {
                 )
                 ClubCommentsPreviewView(
                     commentState: commentState,
+                    replyStates: replyStates,
                     currentUserID: currentUserID,
                     newCommentBody: $newCommentBody,
                     newCommentPageText: $newCommentPageText,
+                    replyDrafts: $replyDrafts,
                     currentPage: summary.readingProgress.currentPage,
                     createAction: createCommentAction,
                     updateAction: updateCommentAction,
-                    deleteAction: deleteCommentAction
+                    deleteAction: deleteCommentAction,
+                    toggleRepliesAction: toggleRepliesAction,
+                    createReplyAction: createReplyAction
                 )
             }
             .padding(PollenSpacing.large)

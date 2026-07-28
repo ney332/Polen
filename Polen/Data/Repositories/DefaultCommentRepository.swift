@@ -32,12 +32,14 @@ actor DefaultCommentRepository: CommentRepository {
     }
 
     func replies(for commentID: UUID) async throws -> [Reply] {
-        []
+        try await cloudKitStore.replies(for: commentID)
     }
 
     func createReply(_ reply: Reply) async throws {
         guard !reply.body.trimmed.isEmpty else {
             throw DomainError.emptyComment
         }
+
+        try await cloudKitStore.createReply(reply)
     }
 }

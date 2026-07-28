@@ -6,6 +6,8 @@ protocol CloudKitCommentStoring: Sendable {
     func createComment(_ comment: Comment) async throws
     func updateComment(_ comment: Comment) async throws
     func deleteComment(id: UUID) async throws
+    func replies(for commentID: UUID) async throws -> [Reply]
+    func createReply(_ reply: Reply) async throws
 }
 
 actor CloudKitCommentStore: CloudKitCommentStoring {
@@ -48,6 +50,31 @@ actor CloudKitCommentStore: CloudKitCommentStoring {
 
     func deleteComment(id: UUID) async throws {
         _ = try await publicDatabase.deleteRecord(withID: CKRecord.ID(recordName: id))
+    }
+
+    func replies(for commentID: UUID) async throws -> [Reply] {
+        let predicate = NSPredicate(format: "%K == %@", CloudKitField.Reply.commentID, commentID.uuidString)
+        let query = CKQuery(recordType: CloudKitRecordType.reply, predicate: predicate)
+        query.sortDescriptors = [
+            NSSortDescriptor(key: CloudKitField.Reply.createdAt, ascending: true)
+        ]
+
+        do {
+            let result = try await publicDatabase.records(matching: query, resultsLimit: 100)
+            return try result.matchResults.map { _, recordResult in
+                try Reply(record: recordResult.get())
+            }
+        } catch {
+            if error.isMissingCloudKitRecordType {
+                return []
+            }
+
+            throw error
+        }
+    }
+
+    func createReply(_ reply: Reply) async throws {
+        _ = try await publicDatabase.save(CKRecord(reply: reply))
     }
 }
 

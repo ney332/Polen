@@ -27,6 +27,11 @@ extension CKRecord {
         update(with: comment)
     }
 
+    convenience init(reply: Reply) {
+        self.init(recordType: CloudKitRecordType.reply, recordID: CKRecord.ID(recordName: reply.id))
+        update(with: reply)
+    }
+
     func update(with book: Book) {
         self[CloudKitField.Shared.id] = book.id.uuidString
         self[CloudKitField.Book.googleBooksID] = book.googleBooksID
@@ -71,6 +76,14 @@ extension CKRecord {
         self[CloudKitField.Comment.body] = comment.body
         self[CloudKitField.Comment.pageReference] = comment.pageReference
         self[CloudKitField.Comment.createdAt] = comment.createdAt
+    }
+
+    func update(with reply: Reply) {
+        self[CloudKitField.Shared.id] = reply.id.uuidString
+        self[CloudKitField.Reply.commentID] = reply.commentID.uuidString
+        self[CloudKitField.Reply.authorID] = reply.authorID.uuidString
+        self[CloudKitField.Reply.body] = reply.body
+        self[CloudKitField.Reply.createdAt] = reply.createdAt
     }
 }
 
@@ -143,6 +156,18 @@ extension Comment {
             body: try record.string(for: CloudKitField.Comment.body),
             pageReference: record[CloudKitField.Comment.pageReference] as? Int ?? 0,
             createdAt: try record.date(for: CloudKitField.Comment.createdAt)
+        )
+    }
+}
+
+extension Reply {
+    init(record: CKRecord) throws {
+        self.init(
+            id: try record.uuid(for: CloudKitField.Shared.id),
+            commentID: try record.uuid(for: CloudKitField.Reply.commentID),
+            authorID: try record.uuid(for: CloudKitField.Reply.authorID),
+            body: try record.string(for: CloudKitField.Reply.body),
+            createdAt: try record.date(for: CloudKitField.Reply.createdAt)
         )
     }
 }

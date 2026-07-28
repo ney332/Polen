@@ -1,16 +1,35 @@
 import CloudKit
 
 enum CloudKitRecordType {
+    static let userProfile = "UserProfile"
+    static let clubInviteShare = "ClubInviteShare"
     static let book = "Book"
     static let bookClub = "BookClub"
     static let membership = "Membership"
     static let readingProgress = "ReadingProgress"
     static let comment = "Comment"
+    static let reply = "Reply"
 }
 
 enum CloudKitField {
     enum Shared {
         static let id = "id"
+    }
+
+    enum UserProfile {
+        static let appleUserIdentifier = "appleUserIdentifier"
+        static let displayName = "displayName"
+        static let avatarAssetName = "avatarAssetName"
+        static let avatarImage = "avatarImage"
+        static let biography = "biography"
+        static let createdAt = "createdAt"
+    }
+
+    enum ClubInviteShare {
+        static let clubID = "clubID"
+        static let clubName = "clubName"
+        static let inviteCode = "inviteCode"
+        static let createdAt = "createdAt"
     }
 
     enum Book {
@@ -51,6 +70,13 @@ enum CloudKitField {
         static let authorID = "authorID"
         static let body = "body"
         static let pageReference = "pageReference"
+        static let createdAt = "createdAt"
+    }
+
+    enum Reply {
+        static let commentID = "commentID"
+        static let authorID = "authorID"
+        static let body = "body"
         static let createdAt = "createdAt"
     }
 }

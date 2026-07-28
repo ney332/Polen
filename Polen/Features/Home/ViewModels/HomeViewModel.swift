@@ -6,8 +6,10 @@ import Observation
 final class HomeViewModel {
     private(set) var state: HomeState = .loading
     private(set) var commentState: CommentTimelineState = .loading
+    private(set) var replyStates: [UUID: ReplyThreadState] = [:]
     var newCommentBody = ""
     var newCommentPageText = ""
+    var replyDrafts: [UUID: String] = [:]
 
     private let appState: AppState
     private let router: AppRouter
@@ -18,6 +20,8 @@ final class HomeViewModel {
     private let createCommentUseCase: CreateCommentUseCase
     private let updateCommentUseCase: UpdateCommentUseCase
     private let deleteCommentUseCase: DeleteCommentUseCase
+    private let loadRepliesUseCase: LoadRepliesUseCase
+    private let createReplyUseCase: CreateReplyUseCase
 
     var displayName: String {
         appState.currentUser?.displayName ?? "Leitor"
@@ -46,6 +50,8 @@ final class HomeViewModel {
         self.createCommentUseCase = CreateCommentUseCase(commentRepository: commentRepository)
         self.updateCommentUseCase = UpdateCommentUseCase(commentRepository: commentRepository)
         self.deleteCommentUseCase = DeleteCommentUseCase(commentRepository: commentRepository)
+        self.loadRepliesUseCase = LoadRepliesUseCase(commentRepository: commentRepository)
+        self.createReplyUseCase = CreateReplyUseCase(commentRepository: commentRepository)
     }
 
     func load() async {
@@ -54,8 +60,26 @@ final class HomeViewModel {
             return
         }
 
+        if case .club(let summary) = state,
+           appState.currentClubSummary == summary {
+            return
+        }
+
+        if let cachedSummary = appState.currentClubSummary {
+            state = .club(cachedSummary)
+
+            if newCommentPageText.isEmpty {
+                newCommentPageText = "\(cachedSummary.readingProgress.currentPage)"
+            }
+
+            await loadVisibleComments(for: cachedSummary)
+        }
+
         let resolvedState = resolveHomeStateUseCase.execute(currentClubID: appState.currentClubID)
-        state = .loading
+
+        if appState.currentClubSummary == nil {
+            state = .loading
+        }
 
         do {
             let summary: HomeClubSummary?
@@ -77,8 +101,7 @@ final class HomeViewModel {
                 return
             }
 
-            appState.enterClub(id: summary.id)
-            appState.readingProgress = summary.readingProgress
+            appState.updateClubSummary(summary)
             state = .club(summary)
             newCommentPageText = "\(summary.readingProgress.currentPage)"
             await loadVisibleComments(for: summary)
@@ -92,7 +115,7 @@ final class HomeViewModel {
     }
 
     func openJoinClub() {
-        router.navigate(to: .joinClub)
+        router.navigate(to: .joinClub(nil))
     }
 
     func openProfile() {
@@ -112,6 +135,7 @@ final class HomeViewModel {
             )
             appState.readingProgress = progress
             let updatedSummary = summary.updating(progress: progress)
+            appState.updateClubSummary(updatedSummary)
             state = .club(updatedSummary)
             newCommentPageText = "\(progress.currentPage)"
             await loadVisibleComments(for: updatedSummary)
@@ -166,6 +190,34 @@ final class HomeViewModel {
         }
     }
 
+    func toggleReplies(for comment: Comment) async {
+        switch replyStates[comment.id] {
+        case .loaded, .empty, .failed, .loading:
+            replyStates[comment.id] = .collapsed
+        case .collapsed, .none:
+            await loadReplies(for: comment.id)
+        }
+    }
+
+    func createReply(for comment: Comment) async {
+        guard let userID = appState.currentUser?.id else {
+            replyStates[comment.id] = .failed(DomainError.unauthenticated.localizedDescription)
+            return
+        }
+
+        do {
+            _ = try await createReplyUseCase.execute(
+                commentID: comment.id,
+                authorID: userID,
+                body: replyDrafts[comment.id] ?? ""
+            )
+            replyDrafts[comment.id] = ""
+            await loadReplies(for: comment.id)
+        } catch {
+            replyStates[comment.id] = .failed(error.localizedDescription)
+        }
+    }
+
     private func loadVisibleComments(for summary: HomeClubSummary) async {
         commentState = .loading
 
@@ -175,8 +227,22 @@ final class HomeViewModel {
                 readingProgress: summary.readingProgress
             )
             commentState = comments.isEmpty ? .empty : .loaded(comments)
+            replyStates = replyStates.filter { commentID, state in
+                comments.contains { $0.id == commentID } && state != .collapsed
+            }
         } catch {
             commentState = .failed(error.localizedDescription)
+        }
+    }
+
+    private func loadReplies(for commentID: UUID) async {
+        replyStates[commentID] = .loading
+
+        do {
+            let replies = try await loadRepliesUseCase.execute(commentID: commentID)
+            replyStates[commentID] = replies.isEmpty ? .empty : .loaded(replies)
+        } catch {
+            replyStates[commentID] = .failed(error.localizedDescription)
         }
     }
 }

@@ -15,8 +15,10 @@ final class JoinClubViewModel {
     init(
         appState: AppState,
         router: AppRouter,
-        clubRepository: BookClubRepository
+        clubRepository: BookClubRepository,
+        initialInviteCode: String? = nil
     ) {
+        self.inviteCode = initialInviteCode ?? ""
         self.appState = appState
         self.router = router
         self.joinClubUseCase = JoinClubUseCase(clubRepository: clubRepository)

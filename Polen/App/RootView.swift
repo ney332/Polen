@@ -14,6 +14,14 @@ struct RootView: View {
                 }
         }
         .tint(PollenColors.primary)
+        .onChange(of: appState.sessionState) { _, newState in
+            guard newState == .signedIn,
+                  let inviteCode = appState.consumePendingInviteCode() else {
+                return
+            }
+
+            router.openJoinClub(inviteCode: inviteCode)
+        }
     }
 
     @ViewBuilder
@@ -33,13 +41,7 @@ struct RootView: View {
             )
         case .signedIn:
             HomeView(
-                viewModel: HomeViewModel(
-                    appState: appState,
-                    router: router,
-                    clubHomeRepository: dependencies.clubHomeRepository,
-                    readingProgressRepository: dependencies.readingProgressRepository,
-                    commentRepository: dependencies.commentRepository
-                )
+                viewModel: dependencies.homeViewModel
             )
         }
     }
@@ -48,7 +50,16 @@ struct RootView: View {
     private func destination(for route: AppRoute) -> some View {
         switch route {
         case .profile:
-            ProfileView(viewModel: ProfileViewModel(appState: appState))
+            ProfileView(
+                viewModel: ProfileViewModel(
+                    appState: appState,
+                    clubHomeRepository: dependencies.clubHomeRepository,
+                    userSettingsRepository: dependencies.userSettingsRepository,
+                    userProfileRepository: dependencies.userProfileRepository,
+                    clubRepository: dependencies.clubRepository,
+                    clubInviteShareStore: dependencies.clubInviteShareStore
+                )
+            )
         case .createClub:
             CreateClubView(
                 viewModel: CreateClubViewModel(
@@ -58,23 +69,18 @@ struct RootView: View {
                     clubRepository: dependencies.clubRepository
                 )
             )
-        case .joinClub:
+        case .joinClub(let inviteCode):
             JoinClubView(
                 viewModel: JoinClubViewModel(
                     appState: appState,
                     router: router,
-                    clubRepository: dependencies.clubRepository
+                    clubRepository: dependencies.clubRepository,
+                    initialInviteCode: inviteCode
                 )
             )
         case .clubHome:
             HomeView(
-                viewModel: HomeViewModel(
-                    appState: appState,
-                    router: router,
-                    clubHomeRepository: dependencies.clubHomeRepository,
-                    readingProgressRepository: dependencies.readingProgressRepository,
-                    commentRepository: dependencies.commentRepository
-                )
+                viewModel: dependencies.homeViewModel
             )
         }
     }

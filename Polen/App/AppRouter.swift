@@ -13,11 +13,16 @@ final class AppRouter {
     func popToRoot() {
         path.removeLast(path.count)
     }
+
+    func openJoinClub(inviteCode: String) {
+        popToRoot()
+        navigate(to: .joinClub(inviteCode))
+    }
 }
 
 enum AppRoute: Hashable {
     case profile
     case createClub
-    case joinClub
+    case joinClub(String?)
     case clubHome
 }
