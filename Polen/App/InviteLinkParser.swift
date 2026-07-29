@@ -4,12 +4,12 @@ enum InviteLinkParser {
     static func makeInviteURL(inviteCode: String) -> URL {
         var components = URLComponents()
         components.scheme = "https"
-        components.host = "polen.app"
-        components.path = "/join"
+        components.host = "polen-ck0.pages.dev"
+        components.path = "/join/"
         components.queryItems = [
             URLQueryItem(name: "code", value: inviteCode)
         ]
-        return components.url ?? URL(string: "https://polen.app/join?code=\(inviteCode)")!
+        return components.url ?? URL(string: "https://polen-ck0.pages.dev/join/?code=\(inviteCode)")!
     }
 
     static func makeAppInviteURL(inviteCode: String) -> URL {
@@ -45,7 +45,9 @@ enum InviteLinkParser {
             return true
         }
 
-        if scheme == "https", host == "polen.app", url.path == "/join" {
+        if scheme == "https",
+           ["polen.app", "polen-ck0.pages.dev"].contains(host),
+           ["/join", "/join/"].contains(url.path) {
             return true
         }
 
