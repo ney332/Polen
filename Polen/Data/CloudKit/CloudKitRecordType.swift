@@ -2,7 +2,6 @@ import CloudKit
 
 enum CloudKitRecordType {
     static let userProfile = "UserProfile"
-    static let clubInviteShare = "ClubInviteShare"
     static let book = "Book"
     static let bookClub = "BookClub"
     static let membership = "Membership"
@@ -22,13 +21,6 @@ enum CloudKitField {
         static let avatarAssetName = "avatarAssetName"
         static let avatarImage = "avatarImage"
         static let biography = "biography"
-        static let createdAt = "createdAt"
-    }
-
-    enum ClubInviteShare {
-        static let clubID = "clubID"
-        static let clubName = "clubName"
-        static let inviteCode = "inviteCode"
         static let createdAt = "createdAt"
     }
 

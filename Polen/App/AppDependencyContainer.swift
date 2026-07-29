@@ -12,7 +12,6 @@ struct AppDependencyContainer {
     let clubHomeRepository: ClubHomeRepository
     let readingProgressRepository: ReadingProgressRepository
     let commentRepository: CommentRepository
-    let clubInviteShareStore: CloudKitClubInviteShareStore
     let userSettingsRepository: UserSettingsRepository
     let userProfileRepository: UserProfileRepository
     let signInUseCase: SignInUseCase
@@ -36,7 +35,6 @@ struct AppDependencyContainer {
         let commentRepository = DefaultCommentRepository(
             cloudKitStore: CloudKitCommentStore(containerProvider: cloudKitProvider)
         )
-        let clubInviteShareStore = CloudKitClubInviteShareStore(containerProvider: cloudKitProvider)
         let userSettingsRepository = UserDefaultsUserSettingsRepository()
         let userProfileRepository = DefaultUserProfileRepository(
             cloudKitStore: CloudKitUserProfileStore(containerProvider: cloudKitProvider)
@@ -62,7 +60,6 @@ struct AppDependencyContainer {
             clubHomeRepository: clubHomeRepository,
             readingProgressRepository: readingProgressRepository,
             commentRepository: commentRepository,
-            clubInviteShareStore: clubInviteShareStore,
             userSettingsRepository: userSettingsRepository,
             userProfileRepository: userProfileRepository,
             signInUseCase: SignInUseCase(authenticationRepository: authenticationRepository),

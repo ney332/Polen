@@ -19,7 +19,6 @@ final class ProfileViewModel {
     private let saveUserSettingsUseCase: SaveUserSettingsUseCase
     private let saveUserProfileUseCase: SaveUserProfileUseCase
     private let leaveClubUseCase: LeaveClubUseCase
-    let clubInviteShareStore: CloudKitClubInviteShareStore
 
     var displayName: String {
         summary?.user.displayName ?? appState.currentUser?.displayName ?? "Leitor"
@@ -38,8 +37,7 @@ final class ProfileViewModel {
         clubHomeRepository: ClubHomeRepository,
         userSettingsRepository: UserSettingsRepository,
         userProfileRepository: UserProfileRepository,
-        clubRepository: BookClubRepository,
-        clubInviteShareStore: CloudKitClubInviteShareStore
+        clubRepository: BookClubRepository
     ) {
         self.appState = appState
         self.loadProfileSummaryUseCase = LoadProfileSummaryUseCase(
@@ -54,7 +52,6 @@ final class ProfileViewModel {
             userProfileRepository: userProfileRepository
         )
         self.leaveClubUseCase = LeaveClubUseCase(clubRepository: clubRepository)
-        self.clubInviteShareStore = clubInviteShareStore
         self.notificationsEnabled = appState.settings.notificationsEnabled
         self.selectedAvatarName = appState.currentUser?.avatarAssetName ?? selectedAvatarName
         self.displayNameDraft = appState.currentUser?.displayName ?? ""

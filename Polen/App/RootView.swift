@@ -56,8 +56,7 @@ struct RootView: View {
                     clubHomeRepository: dependencies.clubHomeRepository,
                     userSettingsRepository: dependencies.userSettingsRepository,
                     userProfileRepository: dependencies.userProfileRepository,
-                    clubRepository: dependencies.clubRepository,
-                    clubInviteShareStore: dependencies.clubInviteShareStore
+                    clubRepository: dependencies.clubRepository
                 )
             )
         case .createClub:

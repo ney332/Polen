@@ -11,7 +11,6 @@ final class AppState {
     var readingProgress: ReadingProgress?
     var settings: UserSettings = .default
     var pendingInviteCode: String?
-    var shareInviteErrorMessage: String?
 
     private let authenticationRepository: AuthenticationRepository
 
@@ -35,7 +34,6 @@ final class AppState {
 
     func storePendingInviteCode(_ inviteCode: String) {
         pendingInviteCode = inviteCode
-        shareInviteErrorMessage = nil
     }
 
     func consumePendingInviteCode() -> String? {
@@ -44,10 +42,6 @@ final class AppState {
         }
 
         return pendingInviteCode
-    }
-
-    func storeShareInviteError(_ message: String) {
-        shareInviteErrorMessage = message
     }
 
     func enterClub(id clubID: UUID) {

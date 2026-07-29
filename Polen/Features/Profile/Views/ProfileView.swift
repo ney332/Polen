@@ -26,7 +26,6 @@ struct ProfileView: View {
                         ClubDetailsView(
                             summary: clubSummary,
                             isLeavingClub: viewModel.isLeavingClub,
-                            clubInviteShareStore: viewModel.clubInviteShareStore,
                             leaveClubAction: viewModel.leaveClub
                         )
                     } label: {
