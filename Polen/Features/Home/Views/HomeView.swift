@@ -53,7 +53,7 @@ struct HomeView: View {
                     createCommentAction: viewModel.createComment,
                     updateCommentAction: viewModel.updateComment,
                     deleteCommentAction: viewModel.deleteComment,
-                    toggleRepliesAction: viewModel.toggleReplies,
+                    prepareReplyThreadAction: viewModel.prepareReplyThread,
                     createReplyAction: viewModel.createReply
                 )
             }

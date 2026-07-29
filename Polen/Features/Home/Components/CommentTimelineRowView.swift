@@ -3,12 +3,10 @@ import SwiftUI
 struct CommentTimelineRowView: View {
     let comment: Comment
     let canEdit: Bool
-    let replyState: ReplyThreadState
-    @Binding var replyDraft: String
+    let isSpoilerLocked: Bool
     let updateAction: (String) async -> Void
     let deleteAction: () async -> Void
-    let toggleRepliesAction: () async -> Void
-    let createReplyAction: () async -> Void
+    let replyAction: () -> Void
 
     @State private var isEditing = false
     @State private var draftBody = ""
@@ -17,7 +15,7 @@ struct CommentTimelineRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: PollenSpacing.small) {
-            HStack {
+            HStack(alignment: .top) {
                 Label("Página \(comment.pageReference)", systemImage: "bookmark")
                     .font(PollenTypography.caption)
                     .foregroundStyle(PollenColors.primary)
@@ -53,13 +51,31 @@ struct CommentTimelineRowView: View {
                     .disabled(isSaving || draftBody.trimmed.isEmpty)
                 }
             } else {
-                Text(comment.body)
-                    .font(PollenTypography.body)
-                    .foregroundStyle(PollenColors.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                ZStack {
+                    Text(comment.body)
+                        .font(PollenTypography.body)
+                        .foregroundStyle(PollenColors.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .blur(radius: isSpoilerLocked ? 6 : 0)
+                        .opacity(isSpoilerLocked ? 0.55 : 1)
+
+                    if isSpoilerLocked {
+                        HStack(spacing: PollenSpacing.xSmall) {
+                            Image(systemName: "eye.slash")
+
+                            Text("Pode conter spoiler")
+                        }
+                        .font(PollenTypography.caption)
+                        .foregroundStyle(PollenColors.textPrimary)
+                        .padding(.horizontal, PollenSpacing.small)
+                        .padding(.vertical, PollenSpacing.xSmall)
+                        .background(.thinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                }
             }
 
-            if canEdit && !isEditing {
+            if canEdit && !isEditing && !isSpoilerLocked {
                 HStack {
                     Button {
                         draftBody = comment.body
@@ -85,70 +101,19 @@ struct CommentTimelineRowView: View {
                 }
             }
 
-            Divider()
-
             Button {
-                Task {
-                    await toggleRepliesAction()
-                }
+                replyAction()
             } label: {
-                Label(threadButtonTitle, systemImage: "bubble.left.and.bubble.right")
+                Label("Responder", systemImage: "bubble.left.and.bubble.right")
             }
             .font(PollenTypography.caption)
             .buttonStyle(.plain)
-
-            replyThread
+            .disabled(isSpoilerLocked)
+            .opacity(isSpoilerLocked ? 0.55 : 1)
         }
         .padding(PollenSpacing.medium)
-        .background(PollenColors.background)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PollenColors.groupedBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-    }
-
-    @ViewBuilder
-    private var replyThread: some View {
-        switch replyState {
-        case .collapsed:
-            EmptyView()
-        case .loading:
-            ProgressView()
-                .frame(maxWidth: .infinity)
-        case .empty:
-            VStack(alignment: .leading, spacing: PollenSpacing.small) {
-                Text("Nenhuma resposta ainda.")
-                    .font(PollenTypography.caption)
-                    .foregroundStyle(PollenColors.textSecondary)
-
-                ReplyComposerView(
-                    bodyText: $replyDraft,
-                    createAction: createReplyAction
-                )
-            }
-        case .failed(let message):
-            Text(message)
-                .font(PollenTypography.caption)
-                .foregroundStyle(.red)
-        case .loaded(let replies):
-            VStack(alignment: .leading, spacing: PollenSpacing.small) {
-                ForEach(replies) { reply in
-                    ReplyRowView(reply: reply)
-                }
-
-                ReplyComposerView(
-                    bodyText: $replyDraft,
-                    createAction: createReplyAction
-                )
-            }
-        }
-    }
-
-    private var threadButtonTitle: String {
-        switch replyState {
-        case .collapsed:
-            "Ver discussão"
-        case .loading:
-            "Carregando discussão"
-        case .loaded, .empty, .failed:
-            "Ocultar discussão"
-        }
     }
 }

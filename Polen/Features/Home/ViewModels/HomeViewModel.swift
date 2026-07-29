@@ -151,40 +151,41 @@ final class HomeViewModel {
         }
 
         do {
-            _ = try await createCommentUseCase.execute(
+            newCommentPageText = "\(summary.readingProgress.currentPage)"
+            let comment = try await createCommentUseCase.execute(
                 clubID: summary.id,
                 authorID: userID,
                 body: newCommentBody,
-                pageReference: Int(newCommentPageText) ?? summary.readingProgress.currentPage
+                pageReference: summary.readingProgress.currentPage
             )
             newCommentBody = ""
-            await loadVisibleComments(for: summary)
+            insertComment(comment)
         } catch {
             commentState = .failed(error.localizedDescription)
         }
     }
 
     func updateComment(_ comment: Comment, body: String) async {
-        guard case .club(let summary) = state else {
+        guard case .club = state else {
             return
         }
 
         do {
-            _ = try await updateCommentUseCase.execute(comment: comment, body: body)
-            await loadVisibleComments(for: summary)
+            let updatedComment = try await updateCommentUseCase.execute(comment: comment, body: body)
+            updateCommentInTimeline(updatedComment)
         } catch {
             commentState = .failed(error.localizedDescription)
         }
     }
 
     func deleteComment(_ comment: Comment) async {
-        guard case .club(let summary) = state else {
+        guard case .club = state else {
             return
         }
 
         do {
             try await deleteCommentUseCase.execute(commentID: comment.id)
-            await loadVisibleComments(for: summary)
+            removeVisibleComment(id: comment.id)
         } catch {
             commentState = .failed(error.localizedDescription)
         }
@@ -199,6 +200,15 @@ final class HomeViewModel {
         }
     }
 
+    func prepareReplyThread(for comment: Comment) async {
+        switch replyStates[comment.id] {
+        case .loaded, .empty, .loading:
+            return
+        case .failed, .collapsed, .none:
+            await loadReplies(for: comment.id)
+        }
+    }
+
     func createReply(for comment: Comment) async {
         guard let userID = appState.currentUser?.id else {
             replyStates[comment.id] = .failed(DomainError.unauthenticated.localizedDescription)
@@ -206,13 +216,13 @@ final class HomeViewModel {
         }
 
         do {
-            _ = try await createReplyUseCase.execute(
+            let reply = try await createReplyUseCase.execute(
                 commentID: comment.id,
                 authorID: userID,
                 body: replyDrafts[comment.id] ?? ""
             )
             replyDrafts[comment.id] = ""
-            await loadReplies(for: comment.id)
+            insertReply(reply, for: comment.id)
         } catch {
             replyStates[comment.id] = .failed(error.localizedDescription)
         }
@@ -243,6 +253,47 @@ final class HomeViewModel {
             replyStates[commentID] = replies.isEmpty ? .empty : .loaded(replies)
         } catch {
             replyStates[commentID] = .failed(error.localizedDescription)
+        }
+    }
+
+    private func insertComment(_ comment: Comment) {
+        switch commentState {
+        case .loaded(let comments):
+            commentState = .loaded((comments + [comment]).sorted { $0.createdAt < $1.createdAt })
+        case .empty, .loading, .failed:
+            commentState = .loaded([comment])
+        }
+    }
+
+    private func updateCommentInTimeline(_ comment: Comment) {
+        switch commentState {
+        case .loaded(let comments):
+            let updatedComments = comments.map { $0.id == comment.id ? comment : $0 }
+            commentState = .loaded(updatedComments.sorted { $0.createdAt < $1.createdAt })
+        case .empty, .loading, .failed:
+            commentState = .loaded([comment])
+        }
+    }
+
+    private func removeVisibleComment(id commentID: UUID) {
+        guard case .loaded(let comments) = commentState else {
+            return
+        }
+
+        let remainingComments = comments.filter { $0.id != commentID }
+        commentState = remainingComments.isEmpty ? .empty : .loaded(remainingComments)
+        replyStates[commentID] = nil
+        replyDrafts[commentID] = nil
+    }
+
+    private func insertReply(_ reply: Reply, for commentID: UUID) {
+        switch replyStates[commentID] {
+        case .loaded(let replies):
+            replyStates[commentID] = .loaded((replies + [reply]).sorted { $0.createdAt < $1.createdAt })
+        case .empty, .collapsed, .failed, .none:
+            replyStates[commentID] = .loaded([reply])
+        case .loading:
+            replyStates[commentID] = .loaded([reply])
         }
     }
 }

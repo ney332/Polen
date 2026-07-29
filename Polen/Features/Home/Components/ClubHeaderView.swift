@@ -16,10 +16,6 @@ struct ClubHeaderView: View {
                 Text(summary.clubName)
                     .font(PollenTypography.title)
                     .lineLimit(2)
-
-                Text("\(summary.memberCount) membro\(summary.memberCount == 1 ? "" : "s")")
-                    .font(PollenTypography.caption)
-                    .foregroundStyle(PollenColors.textSecondary)
             }
 
             Spacer()
