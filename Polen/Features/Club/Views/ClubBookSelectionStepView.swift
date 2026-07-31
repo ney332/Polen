@@ -11,11 +11,15 @@ struct ClubBookSelectionStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: PollenSpacing.medium) {
-            Text("Selecione o livro ativo")
+            Text("Selecione o livro")
                 .font(PollenTypography.headline)
 
+            Text("Você pode escolher o livro agora ou depois de criar o clube.")
+                .font(PollenTypography.body)
+                .foregroundStyle(PollenColors.textSecondary)
+
             HStack(spacing: PollenSpacing.small) {
-                TextField("Buscar por título, autor ou ISBN", text: $query)
+                TextField("Buscar por título ou autor", text: $query)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.search)
                     .padding(PollenSpacing.medium)
@@ -52,7 +56,7 @@ struct ClubBookSelectionStepView: View {
             ContentUnavailableView(
                 "Busque um livro",
                 systemImage: "book.closed",
-                description: Text("Pesquise na Google Books API e selecione o livro ativo do clube.")
+                description: Text("Pesquise para definir o livro ou continue sem selecionar.")
             )
         case .loading:
             VStack(spacing: PollenSpacing.medium) {

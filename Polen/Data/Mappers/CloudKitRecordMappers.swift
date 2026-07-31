@@ -12,6 +12,11 @@ extension CKRecord {
         update(with: bookClub)
     }
 
+    convenience init(clubBookShelfItem item: ClubBookShelfItem) {
+        self.init(recordType: CloudKitRecordType.clubBookHistory, recordID: CKRecord.ID(recordName: item.id))
+        update(with: item)
+    }
+
     convenience init(membership: Membership) {
         self.init(recordType: CloudKitRecordType.membership, recordID: CKRecord.ID(recordName: membership.id))
         update(with: membership)
@@ -47,9 +52,16 @@ extension CKRecord {
         self[CloudKitField.Shared.id] = club.id.uuidString
         self[CloudKitField.BookClub.name] = club.name
         self[CloudKitField.BookClub.photoAssetName] = club.photoAssetName
-        self[CloudKitField.BookClub.activeBookID] = club.activeBookID.uuidString
+        self[CloudKitField.BookClub.activeBookID] = club.activeBookID?.uuidString
         self[CloudKitField.BookClub.inviteCode] = club.inviteCode
         self[CloudKitField.BookClub.createdAt] = club.createdAt
+    }
+
+    func update(with item: ClubBookShelfItem) {
+        self[CloudKitField.Shared.id] = item.id
+        self[CloudKitField.ClubBookHistory.clubID] = item.clubID.uuidString
+        self[CloudKitField.ClubBookHistory.bookID] = item.book.id.uuidString
+        self[CloudKitField.ClubBookHistory.startedAt] = item.startedAt
     }
 
     func update(with membership: Membership) {
@@ -72,6 +84,7 @@ extension CKRecord {
     func update(with comment: Comment) {
         self[CloudKitField.Shared.id] = comment.id.uuidString
         self[CloudKitField.Comment.clubID] = comment.clubID.uuidString
+        self[CloudKitField.Comment.bookID] = comment.bookID?.uuidString
         self[CloudKitField.Comment.authorID] = comment.authorID.uuidString
         self[CloudKitField.Comment.authorDisplayName] = comment.authorDisplayName
         self[CloudKitField.Comment.authorAvatarAssetName] = comment.authorAvatarAssetName
@@ -133,7 +146,7 @@ extension BookClub {
             id: try record.uuid(for: CloudKitField.Shared.id),
             name: try record.string(for: CloudKitField.BookClub.name),
             photoAssetName: record.optionalString(for: CloudKitField.BookClub.photoAssetName),
-            activeBookID: try record.uuid(for: CloudKitField.BookClub.activeBookID),
+            activeBookID: record.optionalUUID(for: CloudKitField.BookClub.activeBookID),
             inviteCode: try record.string(for: CloudKitField.BookClub.inviteCode),
             createdAt: try record.date(for: CloudKitField.BookClub.createdAt)
         )
@@ -175,6 +188,7 @@ extension Comment {
         self.init(
             id: try record.uuid(for: CloudKitField.Shared.id),
             clubID: try record.uuid(for: CloudKitField.Comment.clubID),
+            bookID: record.optionalUUID(for: CloudKitField.Comment.bookID),
             authorID: try record.uuid(for: CloudKitField.Comment.authorID),
             authorDisplayName: record.optionalString(for: CloudKitField.Comment.authorDisplayName),
             authorAvatarAssetName: record.optionalString(for: CloudKitField.Comment.authorAvatarAssetName),
@@ -234,6 +248,10 @@ private extension CKRecord {
         }
 
         return uuid
+    }
+
+    func optionalUUID(for field: String) -> UUID? {
+        optionalString(for: field).flatMap(UUID.init(uuidString:))
     }
 
     func date(for field: String) throws -> Date {

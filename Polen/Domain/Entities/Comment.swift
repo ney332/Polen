@@ -3,6 +3,7 @@ import Foundation
 struct Comment: Identifiable, Hashable, Sendable {
     let id: UUID
     var clubID: UUID
+    var bookID: UUID?
     var authorID: UUID
     var authorDisplayName: String?
     var authorAvatarAssetName: String?
@@ -14,6 +15,7 @@ struct Comment: Identifiable, Hashable, Sendable {
     init(
         id: UUID = UUID(),
         clubID: UUID,
+        bookID: UUID? = nil,
         authorID: UUID,
         authorDisplayName: String? = nil,
         authorAvatarAssetName: String? = nil,
@@ -24,6 +26,7 @@ struct Comment: Identifiable, Hashable, Sendable {
     ) {
         self.id = id
         self.clubID = clubID
+        self.bookID = bookID
         self.authorID = authorID
         self.authorDisplayName = authorDisplayName
         self.authorAvatarAssetName = authorAvatarAssetName

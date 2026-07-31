@@ -136,12 +136,7 @@ final class CreateClubViewModel {
                 errorMessage = ClubFlowError.missingClubName.localizedDescription
                 return false
             }
-        case .book:
-            guard draft.selectedBook != nil else {
-                errorMessage = ClubFlowError.missingBook.localizedDescription
-                return false
-            }
-        case .photo, .invite, .review:
+        case .photo, .book, .invite, .review:
             break
         }
 

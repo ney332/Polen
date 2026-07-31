@@ -25,6 +25,17 @@ struct ProfileView: View {
                     NavigationLink {
                         ClubDetailsView(
                             summary: clubSummary,
+                            bookSearchQuery: $viewModel.clubBookSearchQuery,
+                            bookSearchState: viewModel.clubBookSearchState,
+                            bookSearchResults: viewModel.clubBookSearchResults,
+                            bookShelf: viewModel.clubBookShelf,
+                            isLoadingBookShelf: viewModel.isLoadingBookShelf,
+                            shelfCommentStates: viewModel.shelfCommentStates,
+                            isChangingBook: viewModel.isChangingClubBook,
+                            searchBooksAction: viewModel.searchClubBooks,
+                            selectBookAction: viewModel.setClubBook,
+                            loadShelfAction: viewModel.loadBookShelf,
+                            loadBookCommentsAction: viewModel.loadComments,
                             isLeavingClub: viewModel.isLeavingClub,
                             leaveClubAction: viewModel.leaveClub
                         )

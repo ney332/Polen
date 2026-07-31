@@ -17,8 +17,8 @@ extension HomeClubSummary {
             clubName: "",
             photoAssetName: nil,
             inviteCode: "",
-            activeBook: Book(googleBooksID: "", title: ""),
-            readingProgress: ReadingProgress(userID: UUID(), clubID: id, bookID: UUID()),
+            activeBook: nil,
+            readingProgress: nil,
             memberCount: 0
         )
     }

@@ -2,7 +2,7 @@ import CloudKit
 import Foundation
 
 protocol CloudKitCommentStoring: Sendable {
-    func comments(for clubID: UUID) async throws -> [Comment]
+    func comments(for clubID: UUID, bookID: UUID) async throws -> [Comment]
     func createComment(_ comment: Comment) async throws
     func updateComment(_ comment: Comment) async throws
     func deleteComment(id: UUID) async throws
@@ -17,8 +17,14 @@ actor CloudKitCommentStore: CloudKitCommentStoring {
         self.publicDatabase = containerProvider.database(for: .public)
     }
 
-    func comments(for clubID: UUID) async throws -> [Comment] {
-        let predicate = NSPredicate(format: "%K == %@", CloudKitField.Comment.clubID, clubID.uuidString)
+    func comments(for clubID: UUID, bookID: UUID) async throws -> [Comment] {
+        let predicate = NSPredicate(
+            format: "%K == %@ AND %K == %@",
+            CloudKitField.Comment.clubID,
+            clubID.uuidString,
+            CloudKitField.Comment.bookID,
+            bookID.uuidString
+        )
         let query = CKQuery(recordType: CloudKitRecordType.comment, predicate: predicate)
         query.sortDescriptors = [
             NSSortDescriptor(key: CloudKitField.Comment.createdAt, ascending: true)

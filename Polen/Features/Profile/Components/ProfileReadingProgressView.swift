@@ -4,10 +4,10 @@ struct ProfileReadingProgressView: View {
     let summary: HomeClubSummary?
 
     var body: some View {
-        if let summary {
+        if let summary, let readingProgress = summary.readingProgress {
             VStack(alignment: .leading, spacing: PollenSpacing.small) {
                 HStack {
-                    Label("Página \(summary.readingProgress.currentPage)", systemImage: "bookmark")
+                    Label("Página \(readingProgress.currentPage)", systemImage: "bookmark")
                         .font(PollenTypography.headline)
 
                     Spacer()
@@ -27,19 +27,21 @@ struct ProfileReadingProgressView: View {
     }
 
     private func progressText(for summary: HomeClubSummary) -> String {
-        guard let pageCount = summary.activeBook.pageCount, pageCount > 0 else {
+        guard let pageCount = summary.activeBook?.pageCount, pageCount > 0 else {
             return "Livro sem total de páginas"
         }
 
-        return "\(summary.readingProgress.currentPage)/\(pageCount)"
+        return "\(summary.readingProgress?.currentPage ?? 0)/\(pageCount)"
     }
 
     private func progressFraction(for summary: HomeClubSummary) -> Double {
-        guard let pageCount = summary.activeBook.pageCount, pageCount > 0 else {
+        guard let pageCount = summary.activeBook?.pageCount,
+              let readingProgress = summary.readingProgress,
+              pageCount > 0 else {
             return 0
         }
 
-        return min(Double(summary.readingProgress.currentPage) / Double(pageCount), 1)
+        return min(Double(readingProgress.currentPage) / Double(pageCount), 1)
     }
 }
 

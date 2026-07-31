@@ -22,25 +22,32 @@ struct ClubHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: PollenSpacing.medium) {
                     ClubHeaderView(summary: summary)
-                    ActiveBookView(book: summary.activeBook)
-                    ClubCommentsPreviewView(
-                        commentState: commentState,
-                        replyStates: replyStates,
-                        currentUserID: currentUserID,
-                        currentPage: summary.readingProgress.currentPage,
-                        replyDrafts: $replyDrafts,
-                        updateAction: updateCommentAction,
-                        deleteAction: deleteCommentAction,
-                        prepareReplyThreadAction: prepareReplyThreadAction,
-                        createReplyAction: createReplyAction
-                    )
+                    if let activeBook = summary.activeBook,
+                       let readingProgress = summary.readingProgress {
+                        ActiveBookView(book: activeBook)
+                        ClubCommentsPreviewView(
+                            commentState: commentState,
+                            replyStates: replyStates,
+                            currentUserID: currentUserID,
+                            currentPage: readingProgress.currentPage,
+                            replyDrafts: $replyDrafts,
+                            updateAction: updateCommentAction,
+                            deleteAction: deleteCommentAction,
+                            prepareReplyThreadAction: prepareReplyThreadAction,
+                            createReplyAction: createReplyAction
+                        )
+                    } else {
+                        NoActiveBookView()
+                    }
                 }
                 .padding(PollenSpacing.large)
                 .padding(.bottom, 104)
             }
 
-            floatingActions
-                .padding(PollenSpacing.large)
+            if summary.activeBook != nil, summary.readingProgress != nil {
+                floatingActions
+                    .padding(PollenSpacing.large)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PollenColors.background)
@@ -70,5 +77,18 @@ struct ClubHomeView: View {
         .clipShape(Circle())
         .shadow(color: .black.opacity(0.18), radius: 12, x: 0, y: 6)
         .accessibilityLabel("Abrir ações do clube")
+    }
+}
+
+private struct NoActiveBookView: View {
+    var body: some View {
+        ContentUnavailableView(
+            "Nenhum livro escolhido",
+            systemImage: "book.closed",
+            description: Text("Abra Meu Clube no perfil para escolher o livro ativo.")
+        )
+        .frame(maxWidth: .infinity, minHeight: 280)
+        .background(PollenColors.groupedBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }

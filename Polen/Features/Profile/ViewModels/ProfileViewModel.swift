@@ -11,14 +11,26 @@ final class ProfileViewModel {
     var displayNameDraft = ""
     var biographyDraft = ""
     var avatarImageData: Data?
+    var clubBookSearchQuery = ""
+    var clubBookSearchState: BookSearchState = .idle
+    var clubBookSearchResults: [Book] = []
+    var clubBookShelf: [ClubBookShelfItem] = []
+    var isLoadingBookShelf = false
+    var shelfCommentStates: [String: CommentTimelineState] = [:]
     var isSavingProfile = false
     var isLeavingClub = false
+    var isChangingClubBook = false
 
     private let appState: AppState
     private let loadProfileSummaryUseCase: LoadProfileSummaryUseCase
     private let saveUserSettingsUseCase: SaveUserSettingsUseCase
     private let saveUserProfileUseCase: SaveUserProfileUseCase
     private let leaveClubUseCase: LeaveClubUseCase
+    private let searchGoogleBooksUseCase: SearchGoogleBooksUseCase
+    private let saveSelectedBookMetadataUseCase: SaveSelectedBookMetadataUseCase
+    private let setActiveBookUseCase: SetActiveBookUseCase
+    private let loadClubBookShelfUseCase: LoadClubBookShelfUseCase
+    private let loadBookCommentsUseCase: LoadBookCommentsUseCase
 
     var displayName: String {
         summary?.user.displayName ?? appState.currentUser?.displayName ?? "Leitor"
@@ -35,9 +47,11 @@ final class ProfileViewModel {
     init(
         appState: AppState,
         clubHomeRepository: ClubHomeRepository,
+        bookRepository: BookRepository,
         userSettingsRepository: UserSettingsRepository,
         userProfileRepository: UserProfileRepository,
-        clubRepository: BookClubRepository
+        clubRepository: BookClubRepository,
+        commentRepository: CommentRepository
     ) {
         self.appState = appState
         self.loadProfileSummaryUseCase = LoadProfileSummaryUseCase(
@@ -52,6 +66,11 @@ final class ProfileViewModel {
             userProfileRepository: userProfileRepository
         )
         self.leaveClubUseCase = LeaveClubUseCase(clubRepository: clubRepository)
+        self.searchGoogleBooksUseCase = SearchGoogleBooksUseCase(bookRepository: bookRepository)
+        self.saveSelectedBookMetadataUseCase = SaveSelectedBookMetadataUseCase(bookRepository: bookRepository)
+        self.setActiveBookUseCase = SetActiveBookUseCase(clubRepository: clubRepository)
+        self.loadClubBookShelfUseCase = LoadClubBookShelfUseCase(clubRepository: clubRepository)
+        self.loadBookCommentsUseCase = LoadBookCommentsUseCase(commentRepository: commentRepository)
         self.notificationsEnabled = appState.settings.notificationsEnabled
         self.selectedAvatarName = appState.currentUser?.avatarAssetName ?? selectedAvatarName
         self.displayNameDraft = appState.currentUser?.displayName ?? ""
@@ -81,6 +100,7 @@ final class ProfileViewModel {
                 cachedClubSummary: cachedClubSummary
             )
             apply(summary)
+            await loadBookShelf()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -142,6 +162,105 @@ final class ProfileViewModel {
         let settings = UserSettings(notificationsEnabled: notificationsEnabled)
         appState.settings = settings
         await saveUserSettingsUseCase.execute(settings: settings, userID: userID)
+    }
+
+    func searchClubBooks() async {
+        errorMessage = nil
+
+        guard !clubBookSearchQuery.trimmed.isEmpty else {
+            clubBookSearchResults = []
+            clubBookSearchState = .idle
+            return
+        }
+
+        clubBookSearchState = .loading
+
+        do {
+            let books = try await searchGoogleBooksUseCase.execute(query: clubBookSearchQuery)
+            clubBookSearchResults = books
+            clubBookSearchState = books.isEmpty ? .empty : .loaded
+        } catch {
+            clubBookSearchResults = []
+            clubBookSearchState = .failed(error.localizedDescription)
+        }
+    }
+
+    func setClubBook(_ book: Book) async {
+        guard let user = appState.currentUser,
+              let clubSummary = summary?.clubSummary else {
+            errorMessage = DomainError.unauthenticated.localizedDescription
+            return
+        }
+
+        isChangingClubBook = true
+        errorMessage = nil
+
+        do {
+            try await saveSelectedBookMetadataUseCase.execute(book: book)
+            _ = try await setActiveBookUseCase.execute(
+                book: book,
+                clubID: clubSummary.id,
+                userID: user.id
+            )
+
+            let progress = ReadingProgress(userID: user.id, clubID: clubSummary.id, bookID: book.id)
+            let updatedClubSummary = HomeClubSummary(
+                id: clubSummary.id,
+                clubName: clubSummary.clubName,
+                photoAssetName: clubSummary.photoAssetName,
+                inviteCode: clubSummary.inviteCode,
+                activeBook: book,
+                readingProgress: progress,
+                memberCount: clubSummary.memberCount
+            )
+
+            appState.updateClubSummary(updatedClubSummary)
+
+            if let currentSummary = summary {
+                summary = ProfileSummary(
+                    user: currentSummary.user,
+                    settings: currentSummary.settings,
+                    clubSummary: updatedClubSummary
+                )
+            }
+
+            await loadBookShelf()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isChangingClubBook = false
+    }
+
+    func loadBookShelf() async {
+        guard let clubID = summary?.clubSummary?.id else {
+            clubBookShelf = []
+            return
+        }
+
+        isLoadingBookShelf = true
+
+        do {
+            clubBookShelf = try await loadClubBookShelfUseCase.execute(clubID: clubID)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoadingBookShelf = false
+    }
+
+    func loadComments(for item: ClubBookShelfItem) async {
+        shelfCommentStates[item.id] = .loading
+
+        do {
+            let comments = try await loadBookCommentsUseCase.execute(
+                clubID: item.clubID,
+                bookID: item.book.id
+            )
+            shelfCommentStates[item.id] = comments.isEmpty ? .empty : .loaded(comments)
+        } catch {
+            shelfCommentStates[item.id] = .failed(error.localizedDescription)
+        }
     }
 
     func signOut() async {

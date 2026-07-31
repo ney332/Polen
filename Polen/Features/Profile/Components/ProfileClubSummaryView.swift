@@ -9,7 +9,7 @@ struct ProfileClubSummaryView: View {
                 Label(summary.clubName, systemImage: summary.photoAssetName ?? "person.2")
                     .font(PollenTypography.headline)
 
-                Text(summary.activeBook.title)
+                Text(summary.activeBook?.title ?? "Nenhum livro selecionado")
                     .font(PollenTypography.body)
                     .foregroundStyle(PollenColors.textSecondary)
 

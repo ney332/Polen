@@ -68,8 +68,8 @@ final class HomeViewModel {
         if let cachedSummary = appState.currentClubSummary {
             state = .club(cachedSummary)
 
-            if newCommentPageText.isEmpty {
-                newCommentPageText = "\(cachedSummary.readingProgress.currentPage)"
+            if let readingProgress = cachedSummary.readingProgress, newCommentPageText.isEmpty {
+                newCommentPageText = "\(readingProgress.currentPage)"
             }
 
             await loadVisibleComments(for: cachedSummary)
@@ -103,7 +103,9 @@ final class HomeViewModel {
 
             appState.updateClubSummary(summary)
             state = .club(summary)
-            newCommentPageText = "\(summary.readingProgress.currentPage)"
+            if let readingProgress = summary.readingProgress {
+                newCommentPageText = "\(readingProgress.currentPage)"
+            }
             await loadVisibleComments(for: summary)
         } catch {
             state = .failed(error.localizedDescription)
@@ -123,15 +125,16 @@ final class HomeViewModel {
     }
 
     func updateReadingProgress(to newPage: Int) async {
-        guard case .club(let summary) = state else {
+        guard case .club(let summary) = state,
+              let readingProgress = summary.readingProgress else {
             return
         }
 
         do {
             let progress = try await updateReadingProgressUseCase.execute(
-                currentProgress: summary.readingProgress,
+                currentProgress: readingProgress,
                 newPage: newPage,
-                pageCount: summary.activeBook.pageCount
+                pageCount: summary.activeBook?.pageCount
             )
             appState.readingProgress = progress
             let updatedSummary = summary.updating(progress: progress)
@@ -146,17 +149,19 @@ final class HomeViewModel {
 
     func createComment() async {
         guard case .club(let summary) = state,
+              let readingProgress = summary.readingProgress,
               let user = appState.currentUser else {
             return
         }
 
         do {
-            newCommentPageText = "\(summary.readingProgress.currentPage)"
+            newCommentPageText = "\(readingProgress.currentPage)"
             let comment = try await createCommentUseCase.execute(
                 clubID: summary.id,
+                bookID: readingProgress.bookID,
                 author: user,
                 body: newCommentBody,
-                pageReference: summary.readingProgress.currentPage
+                pageReference: readingProgress.currentPage
             )
             newCommentBody = ""
             insertComment(comment)
@@ -229,12 +234,18 @@ final class HomeViewModel {
     }
 
     private func loadVisibleComments(for summary: HomeClubSummary) async {
+        guard let readingProgress = summary.readingProgress else {
+            commentState = .empty
+            replyStates = [:]
+            return
+        }
+
         commentState = .loading
 
         do {
             let comments = try await loadVisibleCommentsUseCase.execute(
                 clubID: summary.id,
-                readingProgress: summary.readingProgress
+                readingProgress: readingProgress
             )
             commentState = comments.isEmpty ? .empty : .loaded(comments)
             replyStates = replyStates.filter { commentID, state in

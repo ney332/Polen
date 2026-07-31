@@ -4,7 +4,7 @@ struct BookClub: Identifiable, Hashable, Sendable {
     let id: UUID
     var name: String
     var photoAssetName: String?
-    var activeBookID: UUID
+    var activeBookID: UUID?
     var inviteCode: String
     var createdAt: Date
 
@@ -12,7 +12,7 @@ struct BookClub: Identifiable, Hashable, Sendable {
         id: UUID = UUID(),
         name: String,
         photoAssetName: String? = nil,
-        activeBookID: UUID,
+        activeBookID: UUID? = nil,
         inviteCode: String,
         createdAt: Date = .now
     ) {

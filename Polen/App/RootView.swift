@@ -54,9 +54,11 @@ struct RootView: View {
                 viewModel: ProfileViewModel(
                     appState: appState,
                     clubHomeRepository: dependencies.clubHomeRepository,
+                    bookRepository: dependencies.bookRepository,
                     userSettingsRepository: dependencies.userSettingsRepository,
                     userProfileRepository: dependencies.userProfileRepository,
-                    clubRepository: dependencies.clubRepository
+                    clubRepository: dependencies.clubRepository,
+                    commentRepository: dependencies.commentRepository
                 )
             )
         case .createClub:

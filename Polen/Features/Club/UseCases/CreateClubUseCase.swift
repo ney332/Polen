@@ -14,18 +14,14 @@ struct CreateClubUseCase: Sendable {
             throw ClubFlowError.missingClubName
         }
 
-        guard let selectedBook = draft.selectedBook else {
-            throw ClubFlowError.missingBook
-        }
-
         let club = BookClub(
             name: name,
             photoAssetName: draft.photoSymbolName,
-            activeBookID: selectedBook.id,
+            activeBookID: draft.selectedBook?.id,
             inviteCode: InviteCodeGenerator.makeCode(from: name)
         )
 
-        try await clubRepository.createClub(club, book: selectedBook, ownerID: ownerID)
+        try await clubRepository.createClub(club, book: draft.selectedBook, ownerID: ownerID)
 
         return club
     }

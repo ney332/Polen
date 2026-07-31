@@ -10,21 +10,23 @@ struct ClubActionSheetView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: PollenSpacing.medium) {
-                ReadingProgressSummaryView(
-                    progress: summary.readingProgress,
-                    pageCount: summary.activeBook.pageCount,
-                    updateAction: updateProgressAction
-                )
+                if let readingProgress = summary.readingProgress {
+                    ReadingProgressSummaryView(
+                        progress: readingProgress,
+                        pageCount: summary.activeBook?.pageCount,
+                        updateAction: updateProgressAction
+                    )
 
-                CommentComposerView(
-                    bodyText: $newCommentBody,
-                    pageText: $newCommentPageText,
-                    currentPage: summary.readingProgress.currentPage,
-                    createAction: createCommentAction
-                )
-                .padding(PollenSpacing.medium)
-                .background(PollenColors.groupedBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    CommentComposerView(
+                        bodyText: $newCommentBody,
+                        pageText: $newCommentPageText,
+                        currentPage: readingProgress.currentPage,
+                        createAction: createCommentAction
+                    )
+                    .padding(PollenSpacing.medium)
+                    .background(PollenColors.groupedBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
             }
             .padding(PollenSpacing.large)
         }

@@ -7,8 +7,8 @@ actor DefaultCommentRepository: CommentRepository {
         self.cloudKitStore = cloudKitStore
     }
 
-    func comments(for clubID: UUID) async throws -> [Comment] {
-        try await cloudKitStore.comments(for: clubID)
+    func comments(for clubID: UUID, bookID: UUID) async throws -> [Comment] {
+        try await cloudKitStore.comments(for: clubID, bookID: bookID)
     }
 
     func createComment(_ comment: Comment) async throws {

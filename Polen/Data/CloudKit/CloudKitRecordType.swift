@@ -4,6 +4,7 @@ enum CloudKitRecordType {
     static let userProfile = "UserProfile"
     static let book = "Book"
     static let bookClub = "BookClub"
+    static let clubBookHistory = "ClubBookHistory"
     static let membership = "Membership"
     static let readingProgress = "ReadingProgress"
     static let comment = "Comment"
@@ -42,6 +43,12 @@ enum CloudKitField {
         static let createdAt = "createdAt"
     }
 
+    enum ClubBookHistory {
+        static let clubID = "clubID"
+        static let bookID = "bookID"
+        static let startedAt = "startedAt"
+    }
+
     enum Membership {
         static let userID = "userID"
         static let clubID = "clubID"
@@ -59,6 +66,7 @@ enum CloudKitField {
 
     enum Comment {
         static let clubID = "clubID"
+        static let bookID = "bookID"
         static let authorID = "authorID"
         static let authorDisplayName = "authorDisplayName"
         static let authorAvatarAssetName = "authorAvatarAssetName"

@@ -29,8 +29,17 @@ actor CloudKitClubHomeStore: CloudKitClubHomeStoring, CloudKitReadingProgressSto
 
     func summary(for clubID: UUID, userID: UUID) async throws -> HomeClubSummary {
         let club = try await fetchClub(id: clubID)
-        let book = try await fetchBook(id: club.activeBookID)
-        let progress = try await readingProgress(for: userID, clubID: clubID)
+        let book: Book?
+        let progress: ReadingProgress?
+
+        if let activeBookID = club.activeBookID {
+            book = try await fetchBook(id: activeBookID)
+            progress = try await readingProgress(for: userID, clubID: clubID, activeBookID: activeBookID)
+        } else {
+            book = nil
+            progress = nil
+        }
+
         let memberCount = try await memberCount(for: clubID)
 
         return HomeClubSummary(
@@ -63,7 +72,7 @@ actor CloudKitClubHomeStore: CloudKitClubHomeStoring, CloudKitReadingProgressSto
         return try Book(record: record)
     }
 
-    private func readingProgress(for userID: UUID, clubID: UUID) async throws -> ReadingProgress {
+    private func readingProgress(for userID: UUID, clubID: UUID, activeBookID: UUID) async throws -> ReadingProgress {
         let predicate = NSPredicate(
             format: "%K == %@ AND %K == %@",
             CloudKitField.ReadingProgress.userID,
@@ -72,13 +81,45 @@ actor CloudKitClubHomeStore: CloudKitClubHomeStoring, CloudKitReadingProgressSto
             clubID.uuidString
         )
         let query = CKQuery(recordType: CloudKitRecordType.readingProgress, predicate: predicate)
-        let records = try await queryRecords(matching: query, in: privateDatabase, limit: 1)
+        let records: [CKRecord]
 
-        guard let record = records.first else {
-            throw DomainError.invalidReadingProgress
+        do {
+            records = try await queryRecords(matching: query, in: privateDatabase, limit: 1)
+        } catch {
+            if error.isMissingCloudKitRecordType {
+                return try await createReadingProgress(userID: userID, clubID: clubID, bookID: activeBookID)
+            }
+
+            throw error
         }
 
-        return try ReadingProgress(record: record)
+        guard let record = records.first else {
+            return try await createReadingProgress(userID: userID, clubID: clubID, bookID: activeBookID)
+        }
+
+        var progress = try ReadingProgress(record: record)
+
+        guard progress.bookID != activeBookID else {
+            return progress
+        }
+
+        progress = ReadingProgress(
+            id: progress.id,
+            userID: userID,
+            clubID: clubID,
+            bookID: activeBookID
+        )
+        record.update(with: progress)
+        _ = try await privateDatabase.save(record)
+
+        return progress
+    }
+
+    private func createReadingProgress(userID: UUID, clubID: UUID, bookID: UUID) async throws -> ReadingProgress {
+        let progress = ReadingProgress(userID: userID, clubID: clubID, bookID: bookID)
+        _ = try await privateDatabase.save(CKRecord(readingProgress: progress))
+
+        return progress
     }
 
     private func memberCount(for clubID: UUID) async throws -> Int {

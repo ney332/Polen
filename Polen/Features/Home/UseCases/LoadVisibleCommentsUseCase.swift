@@ -7,7 +7,7 @@ struct LoadVisibleCommentsUseCase: Sendable {
         self.commentRepository = commentRepository
     }
 
-    func execute(clubID: UUID, readingProgress _: ReadingProgress) async throws -> [Comment] {
-        try await commentRepository.comments(for: clubID)
+    func execute(clubID: UUID, readingProgress: ReadingProgress) async throws -> [Comment] {
+        try await commentRepository.comments(for: clubID, bookID: readingProgress.bookID)
     }
 }

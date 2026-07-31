@@ -40,3 +40,4 @@ struct JoinClubView: View {
         .background(PollenColors.background)
     }
 }
+
