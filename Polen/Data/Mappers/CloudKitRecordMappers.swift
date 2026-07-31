@@ -73,6 +73,16 @@ extension CKRecord {
         self[CloudKitField.Shared.id] = comment.id.uuidString
         self[CloudKitField.Comment.clubID] = comment.clubID.uuidString
         self[CloudKitField.Comment.authorID] = comment.authorID.uuidString
+        self[CloudKitField.Comment.authorDisplayName] = comment.authorDisplayName
+        self[CloudKitField.Comment.authorAvatarAssetName] = comment.authorAvatarAssetName
+        if let authorAvatarImageData = comment.authorAvatarImageData {
+            self[CloudKitField.Comment.authorAvatarImage] = try? CKAsset(
+                imageData: authorAvatarImageData,
+                filenamePrefix: "polen-comment-avatar-\(comment.id.uuidString)"
+            )
+        } else {
+            self[CloudKitField.Comment.authorAvatarImage] = nil
+        }
         self[CloudKitField.Comment.body] = comment.body
         self[CloudKitField.Comment.pageReference] = comment.pageReference
         self[CloudKitField.Comment.createdAt] = comment.createdAt
@@ -82,6 +92,16 @@ extension CKRecord {
         self[CloudKitField.Shared.id] = reply.id.uuidString
         self[CloudKitField.Reply.commentID] = reply.commentID.uuidString
         self[CloudKitField.Reply.authorID] = reply.authorID.uuidString
+        self[CloudKitField.Reply.authorDisplayName] = reply.authorDisplayName
+        self[CloudKitField.Reply.authorAvatarAssetName] = reply.authorAvatarAssetName
+        if let authorAvatarImageData = reply.authorAvatarImageData {
+            self[CloudKitField.Reply.authorAvatarImage] = try? CKAsset(
+                imageData: authorAvatarImageData,
+                filenamePrefix: "polen-reply-avatar-\(reply.id.uuidString)"
+            )
+        } else {
+            self[CloudKitField.Reply.authorAvatarImage] = nil
+        }
         self[CloudKitField.Reply.body] = reply.body
         self[CloudKitField.Reply.createdAt] = reply.createdAt
     }
@@ -149,10 +169,16 @@ extension ReadingProgress {
 
 extension Comment {
     init(record: CKRecord) throws {
+        let avatarAsset = record[CloudKitField.Comment.authorAvatarImage] as? CKAsset
+        let avatarImageData = avatarAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
+
         self.init(
             id: try record.uuid(for: CloudKitField.Shared.id),
             clubID: try record.uuid(for: CloudKitField.Comment.clubID),
             authorID: try record.uuid(for: CloudKitField.Comment.authorID),
+            authorDisplayName: record.optionalString(for: CloudKitField.Comment.authorDisplayName),
+            authorAvatarAssetName: record.optionalString(for: CloudKitField.Comment.authorAvatarAssetName),
+            authorAvatarImageData: avatarImageData,
             body: try record.string(for: CloudKitField.Comment.body),
             pageReference: record[CloudKitField.Comment.pageReference] as? Int ?? 0,
             createdAt: try record.date(for: CloudKitField.Comment.createdAt)
@@ -162,13 +188,28 @@ extension Comment {
 
 extension Reply {
     init(record: CKRecord) throws {
+        let avatarAsset = record[CloudKitField.Reply.authorAvatarImage] as? CKAsset
+        let avatarImageData = avatarAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
+
         self.init(
             id: try record.uuid(for: CloudKitField.Shared.id),
             commentID: try record.uuid(for: CloudKitField.Reply.commentID),
             authorID: try record.uuid(for: CloudKitField.Reply.authorID),
+            authorDisplayName: record.optionalString(for: CloudKitField.Reply.authorDisplayName),
+            authorAvatarAssetName: record.optionalString(for: CloudKitField.Reply.authorAvatarAssetName),
+            authorAvatarImageData: avatarImageData,
             body: try record.string(for: CloudKitField.Reply.body),
             createdAt: try record.date(for: CloudKitField.Reply.createdAt)
         )
+    }
+}
+
+private extension CKAsset {
+    convenience init(imageData: Data, filenamePrefix: String) throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appending(path: "\(filenamePrefix).jpg")
+        try imageData.write(to: fileURL, options: [.atomic])
+        self.init(fileURL: fileURL)
     }
 }
 

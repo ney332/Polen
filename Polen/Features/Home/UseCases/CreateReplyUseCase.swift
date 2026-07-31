@@ -7,7 +7,7 @@ struct CreateReplyUseCase: Sendable {
         self.commentRepository = commentRepository
     }
 
-    func execute(commentID: UUID, authorID: UUID, body: String) async throws -> Reply {
+    func execute(commentID: UUID, author: UserProfile, body: String) async throws -> Reply {
         let trimmedBody = body.trimmed
 
         guard !trimmedBody.isEmpty else {
@@ -16,7 +16,10 @@ struct CreateReplyUseCase: Sendable {
 
         let reply = Reply(
             commentID: commentID,
-            authorID: authorID,
+            authorID: author.id,
+            authorDisplayName: author.displayName,
+            authorAvatarAssetName: author.avatarAssetName,
+            authorAvatarImageData: author.avatarImageData,
             body: trimmedBody
         )
 

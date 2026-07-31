@@ -3,6 +3,7 @@ import SwiftUI
 struct CommentThreadChatView: View {
     let comment: Comment
     let replyState: ReplyThreadState
+    let currentUserID: UUID?
     @Binding var replyDraft: String
     let loadAction: () async -> Void
     let createReplyAction: () async -> Void
@@ -10,19 +11,30 @@ struct CommentThreadChatView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: PollenSpacing.medium) {
-                VStack(alignment: .leading, spacing: PollenSpacing.small) {
-                    Label("Página \(comment.pageReference)", systemImage: "bookmark")
-                        .font(PollenTypography.caption)
-                        .foregroundStyle(PollenColors.primary)
+                HStack(alignment: .top, spacing: PollenSpacing.small) {
+                    AuthorAvatarView(
+                        imageData: comment.authorAvatarImageData,
+                        symbolName: comment.authorAvatarAssetName,
+                        size: 40
+                    )
 
-                    Text(comment.body)
-                        .font(PollenTypography.headline)
-                        .foregroundStyle(PollenColors.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: PollenSpacing.xSmall) {
+                        Text(comment.authorDisplayName ?? "Leitor")
+                            .font(PollenTypography.headline)
 
-                    Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
-                        .font(PollenTypography.caption)
-                        .foregroundStyle(PollenColors.textSecondary)
+                        Label("Página \(comment.pageReference)", systemImage: "bookmark")
+                            .font(PollenTypography.caption)
+                            .foregroundStyle(PollenColors.primary)
+
+                        Text(comment.body)
+                            .font(PollenTypography.body)
+                            .foregroundStyle(PollenColors.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(PollenTypography.caption)
+                            .foregroundStyle(PollenColors.textSecondary)
+                    }
                 }
                 .padding(PollenSpacing.medium)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -68,9 +80,12 @@ struct CommentThreadChatView: View {
                 .font(PollenTypography.caption)
                 .foregroundStyle(.red)
         case .loaded(let replies):
-            VStack(alignment: .leading, spacing: PollenSpacing.small) {
+            VStack(spacing: PollenSpacing.small) {
                 ForEach(replies) { reply in
-                    ReplyMessageBubbleView(reply: reply)
+                    ReplyMessageBubbleView(
+                        reply: reply,
+                        isCurrentUser: reply.authorID == currentUserID
+                    )
                 }
             }
         }
@@ -79,21 +94,44 @@ struct CommentThreadChatView: View {
 
 private struct ReplyMessageBubbleView: View {
     let reply: Reply
+    let isCurrentUser: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: PollenSpacing.xSmall) {
-            Text(reply.body)
-                .font(PollenTypography.body)
-                .foregroundStyle(PollenColors.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .bottom, spacing: PollenSpacing.small) {
+            if isCurrentUser {
+                Spacer(minLength: 48)
+            } else {
+                AuthorAvatarView(
+                    imageData: reply.authorAvatarImageData,
+                    symbolName: reply.authorAvatarAssetName,
+                    size: 32
+                )
+            }
 
-            Text(reply.createdAt.formatted(date: .abbreviated, time: .shortened))
-                .font(PollenTypography.caption)
-                .foregroundStyle(PollenColors.textSecondary)
+            VStack(alignment: .leading, spacing: PollenSpacing.xSmall) {
+                if !isCurrentUser {
+                    Text(reply.authorDisplayName ?? "Leitor")
+                        .font(PollenTypography.caption)
+                        .foregroundStyle(PollenColors.primary)
+                }
+
+                Text(reply.body)
+                    .font(PollenTypography.body)
+                    .foregroundStyle(PollenColors.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(reply.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(PollenTypography.caption)
+                    .foregroundStyle(PollenColors.textSecondary)
+            }
+            .padding(PollenSpacing.small)
+            .background(isCurrentUser ? PollenColors.primary.opacity(0.18) : PollenColors.groupedBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            if !isCurrentUser {
+                Spacer(minLength: 48)
+            }
         }
-        .padding(PollenSpacing.medium)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PollenColors.groupedBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
     }
 }

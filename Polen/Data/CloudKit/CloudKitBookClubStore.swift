@@ -44,22 +44,7 @@ actor CloudKitBookClubStore: CloudKitBookClubStoring {
             throw DomainError.userAlreadyHasClub
         }
 
-        let code = inviteCode.normalizedInviteCode
-        let predicate = NSPredicate(format: "%K == %@", CloudKitField.BookClub.inviteCode, code)
-        let query = CKQuery(recordType: CloudKitRecordType.bookClub, predicate: predicate)
-        let records: [CKRecord]
-
-        do {
-            records = try await queryRecords(matching: query, in: publicDatabase, limit: 1)
-        } catch {
-            if error.isMissingCloudKitRecordType {
-                throw DomainError.invalidInviteCode
-            }
-
-            throw error
-        }
-
-        guard let record = records.first else {
+        guard let record = try await firstClubRecord(inviteCode: inviteCode) else {
             throw DomainError.invalidInviteCode
         }
 
@@ -71,6 +56,27 @@ actor CloudKitBookClubStore: CloudKitBookClubStoring {
         _ = try await privateDatabase.save(CKRecord(readingProgress: progress))
 
         return club
+    }
+
+    private func firstClubRecord(inviteCode: String) async throws -> CKRecord? {
+        for code in inviteCode.inviteCodeQueryVariants {
+            let predicate = NSPredicate(format: "%K == %@", CloudKitField.BookClub.inviteCode, code)
+            let query = CKQuery(recordType: CloudKitRecordType.bookClub, predicate: predicate)
+
+            do {
+                if let record = try await queryRecords(matching: query, in: publicDatabase, limit: 1).first {
+                    return record
+                }
+            } catch {
+                if error.isMissingCloudKitRecordType {
+                    return nil
+                }
+
+                throw error
+            }
+        }
+
+        return nil
     }
 
     func leaveClub(userID: UUID) async throws {
@@ -150,6 +156,19 @@ private extension String {
         trimmed
             .uppercased()
             .filter { $0.isLetter || $0.isNumber }
+    }
+
+    var inviteCodeQueryVariants: [String] {
+        let trimmedCode = trimmed.uppercased()
+        let normalizedCode = normalizedInviteCode
+        var variants = [trimmedCode, normalizedCode]
+
+        if normalizedCode.count > 4 {
+            let splitIndex = normalizedCode.index(normalizedCode.endIndex, offsetBy: -4)
+            variants.append("\(normalizedCode[..<splitIndex])-\(normalizedCode[splitIndex...])")
+        }
+
+        return Array(Set(variants)).filter { !$0.isEmpty }
     }
 }
 

@@ -4,6 +4,9 @@ struct Comment: Identifiable, Hashable, Sendable {
     let id: UUID
     var clubID: UUID
     var authorID: UUID
+    var authorDisplayName: String?
+    var authorAvatarAssetName: String?
+    var authorAvatarImageData: Data?
     var body: String
     var pageReference: Int
     var createdAt: Date
@@ -12,6 +15,9 @@ struct Comment: Identifiable, Hashable, Sendable {
         id: UUID = UUID(),
         clubID: UUID,
         authorID: UUID,
+        authorDisplayName: String? = nil,
+        authorAvatarAssetName: String? = nil,
+        authorAvatarImageData: Data? = nil,
         body: String,
         pageReference: Int,
         createdAt: Date = .now
@@ -19,6 +25,9 @@ struct Comment: Identifiable, Hashable, Sendable {
         self.id = id
         self.clubID = clubID
         self.authorID = authorID
+        self.authorDisplayName = authorDisplayName
+        self.authorAvatarAssetName = authorAvatarAssetName
+        self.authorAvatarImageData = authorAvatarImageData
         self.body = body
         self.pageReference = max(0, pageReference)
         self.createdAt = createdAt

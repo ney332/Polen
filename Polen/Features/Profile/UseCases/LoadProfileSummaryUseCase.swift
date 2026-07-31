@@ -21,10 +21,16 @@ struct LoadProfileSummaryUseCase: Sendable {
         self.userProfileRepository = userProfileRepository
     }
 
-    func execute(user: UserProfile) async throws -> ProfileSummary {
+    func execute(user: UserProfile, cachedClubSummary: HomeClubSummary? = nil) async throws -> ProfileSummary {
         async let settings = userSettingsRepository.settings(for: user.id)
-        async let clubSummary = clubHomeRepository.currentSummary(for: user.id)
         async let storedUser = userProfileRepository.profile(for: user.id)
+
+        let clubSummary: HomeClubSummary?
+        if let cachedClubSummary {
+            clubSummary = cachedClubSummary
+        } else {
+            clubSummary = try await clubHomeRepository.currentSummary(for: user.id)
+        }
 
         return try await ProfileSummary(
             user: storedUser ?? user,

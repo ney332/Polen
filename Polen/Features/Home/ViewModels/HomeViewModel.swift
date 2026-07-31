@@ -146,7 +146,7 @@ final class HomeViewModel {
 
     func createComment() async {
         guard case .club(let summary) = state,
-              let userID = appState.currentUser?.id else {
+              let user = appState.currentUser else {
             return
         }
 
@@ -154,7 +154,7 @@ final class HomeViewModel {
             newCommentPageText = "\(summary.readingProgress.currentPage)"
             let comment = try await createCommentUseCase.execute(
                 clubID: summary.id,
-                authorID: userID,
+                author: user,
                 body: newCommentBody,
                 pageReference: summary.readingProgress.currentPage
             )
@@ -210,7 +210,7 @@ final class HomeViewModel {
     }
 
     func createReply(for comment: Comment) async {
-        guard let userID = appState.currentUser?.id else {
+        guard let user = appState.currentUser else {
             replyStates[comment.id] = .failed(DomainError.unauthenticated.localizedDescription)
             return
         }
@@ -218,7 +218,7 @@ final class HomeViewModel {
         do {
             let reply = try await createReplyUseCase.execute(
                 commentID: comment.id,
-                authorID: userID,
+                author: user,
                 body: replyDrafts[comment.id] ?? ""
             )
             replyDrafts[comment.id] = ""

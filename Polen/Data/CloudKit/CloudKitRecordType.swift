@@ -60,6 +60,9 @@ enum CloudKitField {
     enum Comment {
         static let clubID = "clubID"
         static let authorID = "authorID"
+        static let authorDisplayName = "authorDisplayName"
+        static let authorAvatarAssetName = "authorAvatarAssetName"
+        static let authorAvatarImage = "authorAvatarImage"
         static let body = "body"
         static let pageReference = "pageReference"
         static let createdAt = "createdAt"
@@ -68,6 +71,9 @@ enum CloudKitField {
     enum Reply {
         static let commentID = "commentID"
         static let authorID = "authorID"
+        static let authorDisplayName = "authorDisplayName"
+        static let authorAvatarAssetName = "authorAvatarAssetName"
+        static let authorAvatarImage = "authorAvatarImage"
         static let body = "body"
         static let createdAt = "createdAt"
     }

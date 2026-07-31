@@ -16,7 +16,7 @@ enum DomainError: LocalizedError, Equatable {
         case .notClubMember:
             "Apenas membros do clube podem realizar esta ação."
         case .userAlreadyHasClub:
-            "Cada usuário pode participar de apenas um clube."
+            "Você só pode participar de um clube."
         case .invalidInviteCode:
             "Código de convite inválido."
         case .invalidReadingProgress:

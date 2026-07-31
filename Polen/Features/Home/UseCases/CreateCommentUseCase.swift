@@ -7,7 +7,7 @@ struct CreateCommentUseCase: Sendable {
         self.commentRepository = commentRepository
     }
 
-    func execute(clubID: UUID, authorID: UUID, body: String, pageReference: Int) async throws -> Comment {
+    func execute(clubID: UUID, author: UserProfile, body: String, pageReference: Int) async throws -> Comment {
         let trimmedBody = body.trimmed
 
         guard !trimmedBody.isEmpty else {
@@ -16,7 +16,10 @@ struct CreateCommentUseCase: Sendable {
 
         let comment = Comment(
             clubID: clubID,
-            authorID: authorID,
+            authorID: author.id,
+            authorDisplayName: author.displayName,
+            authorAvatarAssetName: author.avatarAssetName,
+            authorAvatarImageData: author.avatarImageData,
             body: trimmedBody,
             pageReference: pageReference
         )

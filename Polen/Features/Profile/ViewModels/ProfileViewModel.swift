@@ -65,21 +65,22 @@ final class ProfileViewModel {
             return
         }
 
-        do {
-            let summary = try await loadProfileSummaryUseCase.execute(user: user)
-            self.summary = summary
-            notificationsEnabled = summary.settings.notificationsEnabled
-            selectedAvatarName = summary.user.avatarAssetName ?? selectedAvatarName
-            displayNameDraft = summary.user.displayName
-            biographyDraft = summary.user.biography ?? ""
-            avatarImageData = summary.user.avatarImageData
-            appState.settings = summary.settings
-            appState.currentUser = summary.user
-            appState.readingProgress = summary.clubSummary?.readingProgress
+        let cachedClubSummary = appState.currentClubSummary
+        apply(
+            ProfileSummary(
+                user: user,
+                settings: appState.settings,
+                clubSummary: cachedClubSummary
+            ),
+            shouldUpdateSharedState: false
+        )
 
-            if let clubSummary = summary.clubSummary {
-                appState.updateClubSummary(clubSummary)
-            }
+        do {
+            let summary = try await loadProfileSummaryUseCase.execute(
+                user: user,
+                cachedClubSummary: cachedClubSummary
+            )
+            apply(summary)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -173,5 +174,27 @@ final class ProfileViewModel {
         }
 
         isLeavingClub = false
+    }
+
+    private func apply(_ summary: ProfileSummary, shouldUpdateSharedState: Bool = true) {
+        self.summary = summary
+        notificationsEnabled = summary.settings.notificationsEnabled
+        selectedAvatarName = summary.user.avatarAssetName ?? selectedAvatarName
+        displayNameDraft = summary.user.displayName
+        biographyDraft = summary.user.biography ?? ""
+        avatarImageData = summary.user.avatarImageData
+
+        guard shouldUpdateSharedState else {
+            return
+        }
+
+        appState.settings = summary.settings
+        appState.currentUser = summary.user
+
+        if let clubSummary = summary.clubSummary {
+            appState.updateClubSummary(clubSummary)
+        } else {
+            appState.readingProgress = nil
+        }
     }
 }

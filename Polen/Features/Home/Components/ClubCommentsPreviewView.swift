@@ -24,6 +24,7 @@ struct ClubCommentsPreviewView: View {
             CommentThreadChatView(
                 comment: comment,
                 replyState: replyStates[comment.id] ?? .collapsed,
+                currentUserID: currentUserID,
                 replyDraft: replyDraftBinding(for: comment.id),
                 loadAction: {
                     await prepareReplyThreadAction(comment)

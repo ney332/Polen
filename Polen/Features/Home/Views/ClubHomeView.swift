@@ -15,9 +15,7 @@ struct ClubHomeView: View {
     let prepareReplyThreadAction: (Comment) async -> Void
     let createReplyAction: (Comment) async -> Void
 
-    @State private var isActionMenuExpanded = false
-    @State private var isShowingCommentComposer = false
-    @State private var isShowingProgressEditor = false
+    @State private var isShowingClubActions = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -46,72 +44,31 @@ struct ClubHomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PollenColors.background)
-        .sheet(isPresented: $isShowingCommentComposer) {
+        .sheet(isPresented: $isShowingClubActions) {
             NavigationStack {
-                CommentComposerView(
-                    bodyText: $newCommentBody,
-                    pageText: $newCommentPageText,
-                    currentPage: summary.readingProgress.currentPage,
-                    createAction: createCommentAction
+                ClubActionSheetView(
+                    summary: summary,
+                    newCommentBody: $newCommentBody,
+                    newCommentPageText: $newCommentPageText,
+                    updateProgressAction: updateProgressAction,
+                    createCommentAction: createCommentAction
                 )
-                .padding(PollenSpacing.large)
-                .navigationTitle("Novo comentário")
-                .navigationBarTitleDisplayMode(.inline)
             }
-            .presentationDetents([.medium, .large])
-        }
-        .sheet(isPresented: $isShowingProgressEditor) {
-            NavigationStack {
-                ReadingProgressSummaryView(
-                    progress: summary.readingProgress,
-                    pageCount: summary.activeBook.pageCount,
-                    updateAction: updateProgressAction
-                )
-                .padding(PollenSpacing.large)
-                .navigationTitle("Atualizar progresso")
-                .navigationBarTitleDisplayMode(.inline)
-            }
-            .presentationDetents([.medium])
+            .presentationDetents([.large])
         }
     }
 
     private var floatingActions: some View {
-        VStack(alignment: .trailing, spacing: PollenSpacing.small) {
-            if isActionMenuExpanded {
-                Button {
-                    isShowingCommentComposer = true
-                    isActionMenuExpanded = false
-                } label: {
-                    Label("Novo comentário", systemImage: "text.bubble")
-                        .padding(.horizontal, PollenSpacing.medium)
-                        .padding(.vertical, PollenSpacing.small)
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button {
-                    isShowingProgressEditor = true
-                    isActionMenuExpanded = false
-                } label: {
-                    Label("Atualizar progresso", systemImage: "bookmark")
-                        .padding(.horizontal, PollenSpacing.medium)
-                        .padding(.vertical, PollenSpacing.small)
-                }
-                .buttonStyle(.borderedProminent)
-            }
-
-            Button {
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.82)) {
-                    isActionMenuExpanded.toggle()
-                }
-            } label: {
-                Image(systemName: isActionMenuExpanded ? "xmark" : "plus")
-                    .font(.system(size: 28, weight: .semibold))
-                    .frame(width: 72, height: 72)
-            }
-            .buttonStyle(.borderedProminent)
-            .clipShape(Circle())
-            .shadow(color: .black.opacity(0.18), radius: 12, x: 0, y: 6)
-            .accessibilityLabel(isActionMenuExpanded ? "Fechar ações" : "Abrir ações do clube")
+        Button {
+            isShowingClubActions = true
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 28, weight: .semibold))
+                .frame(width: 72, height: 72)
         }
+        .buttonStyle(.borderedProminent)
+        .clipShape(Circle())
+        .shadow(color: .black.opacity(0.18), radius: 12, x: 0, y: 6)
+        .accessibilityLabel("Abrir ações do clube")
     }
 }
