@@ -33,6 +33,8 @@
 	<string>$(GOOGLE_BOOKS_API_KEY)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>O Polen usa o microfone para gravar comentarios e respostas em audio.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

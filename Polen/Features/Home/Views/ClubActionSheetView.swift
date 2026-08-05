@@ -3,6 +3,8 @@ import SwiftUI
 struct ClubActionSheetView: View {
     let summary: HomeClubSummary
     @Binding var newCommentBody: String
+    @Binding var newCommentAudioData: Data?
+    @Binding var newCommentAudioDuration: TimeInterval?
     @Binding var newCommentPageText: String
     let updateProgressAction: (Int) async -> Void
     let createCommentAction: () async -> Void
@@ -19,6 +21,8 @@ struct ClubActionSheetView: View {
 
                     CommentComposerView(
                         bodyText: $newCommentBody,
+                        audioData: $newCommentAudioData,
+                        audioDuration: $newCommentAudioDuration,
                         pageText: $newCommentPageText,
                         currentPage: readingProgress.currentPage,
                         createAction: createCommentAction

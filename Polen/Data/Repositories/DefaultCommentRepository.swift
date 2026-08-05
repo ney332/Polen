@@ -12,7 +12,7 @@ actor DefaultCommentRepository: CommentRepository {
     }
 
     func createComment(_ comment: Comment) async throws {
-        guard !comment.body.trimmed.isEmpty else {
+        guard comment.hasContent else {
             throw DomainError.emptyComment
         }
 
@@ -20,7 +20,7 @@ actor DefaultCommentRepository: CommentRepository {
     }
 
     func updateComment(_ comment: Comment) async throws {
-        guard !comment.body.trimmed.isEmpty else {
+        guard comment.hasContent else {
             throw DomainError.emptyComment
         }
 
@@ -36,10 +36,22 @@ actor DefaultCommentRepository: CommentRepository {
     }
 
     func createReply(_ reply: Reply) async throws {
-        guard !reply.body.trimmed.isEmpty else {
+        guard reply.hasContent else {
             throw DomainError.emptyComment
         }
 
         try await cloudKitStore.createReply(reply)
+    }
+}
+
+private extension Comment {
+    var hasContent: Bool {
+        !body.trimmed.isEmpty || audioData != nil
+    }
+}
+
+private extension Reply {
+    var hasContent: Bool {
+        !body.trimmed.isEmpty || audioData != nil
     }
 }

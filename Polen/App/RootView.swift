@@ -22,6 +22,15 @@ struct RootView: View {
 
             router.openJoinClub(inviteCode: inviteCode)
         }
+        .onChange(of: appState.currentClubID) { _, newClubID in
+            guard appState.sessionState == .signedIn, newClubID == nil else {
+                return
+            }
+
+            Task {
+                await dependencies.homeViewModel.load()
+            }
+        }
     }
 
     @ViewBuilder
@@ -53,6 +62,7 @@ struct RootView: View {
             ProfileView(
                 viewModel: ProfileViewModel(
                     appState: appState,
+                    router: router,
                     clubHomeRepository: dependencies.clubHomeRepository,
                     bookRepository: dependencies.bookRepository,
                     userSettingsRepository: dependencies.userSettingsRepository,

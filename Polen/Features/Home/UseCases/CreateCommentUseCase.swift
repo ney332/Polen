@@ -7,10 +7,17 @@ struct CreateCommentUseCase: Sendable {
         self.commentRepository = commentRepository
     }
 
-    func execute(clubID: UUID, bookID: UUID, author: UserProfile, body: String, pageReference: Int) async throws -> Comment {
+    func execute(
+        clubID: UUID,
+        bookID: UUID,
+        author: UserProfile,
+        body: String,
+        audio: AudioAttachment?,
+        pageReference: Int
+    ) async throws -> Comment {
         let trimmedBody = body.trimmed
 
-        guard !trimmedBody.isEmpty else {
+        guard !trimmedBody.isEmpty || audio != nil else {
             throw DomainError.emptyComment
         }
 
@@ -22,6 +29,8 @@ struct CreateCommentUseCase: Sendable {
             authorAvatarAssetName: author.avatarAssetName,
             authorAvatarImageData: author.avatarImageData,
             body: trimmedBody,
+            audioData: audio?.data,
+            audioDuration: audio?.duration,
             pageReference: pageReference
         )
 

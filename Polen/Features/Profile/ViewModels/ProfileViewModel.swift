@@ -22,6 +22,7 @@ final class ProfileViewModel {
     var isChangingClubBook = false
 
     private let appState: AppState
+    private let router: AppRouter
     private let loadProfileSummaryUseCase: LoadProfileSummaryUseCase
     private let saveUserSettingsUseCase: SaveUserSettingsUseCase
     private let saveUserProfileUseCase: SaveUserProfileUseCase
@@ -46,6 +47,7 @@ final class ProfileViewModel {
 
     init(
         appState: AppState,
+        router: AppRouter,
         clubHomeRepository: ClubHomeRepository,
         bookRepository: BookRepository,
         userSettingsRepository: UserSettingsRepository,
@@ -54,6 +56,7 @@ final class ProfileViewModel {
         commentRepository: CommentRepository
     ) {
         self.appState = appState
+        self.router = router
         self.loadProfileSummaryUseCase = LoadProfileSummaryUseCase(
             clubHomeRepository: clubHomeRepository,
             userSettingsRepository: userSettingsRepository,
@@ -280,6 +283,11 @@ final class ProfileViewModel {
         do {
             try await leaveClubUseCase.execute(userID: userID)
             appState.clearClub()
+            clubBookShelf = []
+            shelfCommentStates = [:]
+            clubBookSearchQuery = ""
+            clubBookSearchResults = []
+            clubBookSearchState = .idle
 
             if let currentSummary = summary {
                 summary = ProfileSummary(
@@ -288,6 +296,10 @@ final class ProfileViewModel {
                     clubSummary: nil
                 )
             }
+
+            isLeavingClub = false
+            router.popToRoot()
+            return
         } catch {
             errorMessage = error.localizedDescription
         }

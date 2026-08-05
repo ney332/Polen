@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ReplyComposerView: View {
     @Binding var bodyText: String
+    @Binding var audioData: Data?
+    @Binding var audioDuration: TimeInterval?
     let createAction: () async -> Void
 
     @State private var isCreating = false
@@ -11,6 +13,8 @@ struct ReplyComposerView: View {
             TextField("Responder", text: $bodyText, axis: .vertical)
                 .lineLimit(1...4)
                 .textFieldStyle(.roundedBorder)
+
+            AudioRecorderView(audioData: $audioData, audioDuration: $audioDuration)
 
             Button {
                 Task {
@@ -23,7 +27,7 @@ struct ReplyComposerView: View {
                     .font(.title3)
             }
             .buttonStyle(.plain)
-            .disabled(isCreating || bodyText.trimmed.isEmpty)
+            .disabled(isCreating || (bodyText.trimmed.isEmpty && audioData == nil))
             .accessibilityLabel("Enviar resposta")
         }
     }

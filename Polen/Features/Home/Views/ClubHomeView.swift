@@ -6,8 +6,12 @@ struct ClubHomeView: View {
     let replyStates: [UUID: ReplyThreadState]
     let currentUserID: UUID?
     @Binding var newCommentBody: String
+    @Binding var newCommentAudioData: Data?
+    @Binding var newCommentAudioDuration: TimeInterval?
     @Binding var newCommentPageText: String
     @Binding var replyDrafts: [UUID: String]
+    @Binding var replyAudioData: [UUID: Data]
+    @Binding var replyAudioDurations: [UUID: TimeInterval]
     let updateProgressAction: (Int) async -> Void
     let createCommentAction: () async -> Void
     let updateCommentAction: (Comment, String) async -> Void
@@ -24,14 +28,16 @@ struct ClubHomeView: View {
                     ClubHeaderView(summary: summary)
                     if let activeBook = summary.activeBook,
                        let readingProgress = summary.readingProgress {
-                        ActiveBookView(book: activeBook)
+//                        ActiveBookView(book: activeBook) // ViewModel do livro que aparece na home
                         ClubCommentsPreviewView(
                             commentState: commentState,
                             replyStates: replyStates,
                             currentUserID: currentUserID,
-                            currentPage: readingProgress.currentPage,
-                            replyDrafts: $replyDrafts,
-                            updateAction: updateCommentAction,
+                        currentPage: readingProgress.currentPage,
+                        replyDrafts: $replyDrafts,
+                        replyAudioData: $replyAudioData,
+                        replyAudioDurations: $replyAudioDurations,
+                        updateAction: updateCommentAction,
                             deleteAction: deleteCommentAction,
                             prepareReplyThreadAction: prepareReplyThreadAction,
                             createReplyAction: createReplyAction
@@ -56,6 +62,8 @@ struct ClubHomeView: View {
                 ClubActionSheetView(
                     summary: summary,
                     newCommentBody: $newCommentBody,
+                    newCommentAudioData: $newCommentAudioData,
+                    newCommentAudioDuration: $newCommentAudioDuration,
                     newCommentPageText: $newCommentPageText,
                     updateProgressAction: updateProgressAction,
                     createCommentAction: createCommentAction

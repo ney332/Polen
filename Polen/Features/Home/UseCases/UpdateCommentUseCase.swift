@@ -10,7 +10,7 @@ struct UpdateCommentUseCase: Sendable {
     func execute(comment: Comment, body: String) async throws -> Comment {
         let trimmedBody = body.trimmed
 
-        guard !trimmedBody.isEmpty else {
+        guard !trimmedBody.isEmpty || comment.audioData != nil else {
             throw DomainError.emptyComment
         }
 

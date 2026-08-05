@@ -60,16 +60,24 @@ struct CommentTimelineRowView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
-                        .disabled(isSaving || draftBody.trimmed.isEmpty)
+                        .disabled(isSaving || (draftBody.trimmed.isEmpty && comment.audioData == nil))
                     }
                 } else {
                     ZStack {
-                        Text(comment.body)
-                            .font(PollenTypography.body)
-                            .foregroundStyle(PollenColors.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .blur(radius: isSpoilerLocked ? 6 : 0)
-                            .opacity(isSpoilerLocked ? 0.55 : 1)
+                        VStack(alignment: .leading, spacing: PollenSpacing.small) {
+                            if !comment.body.isEmpty {
+                                Text(comment.body)
+                                    .font(PollenTypography.body)
+                                    .foregroundStyle(PollenColors.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            if let audioData = comment.audioData {
+                                AudioPlaybackView(audioData: audioData, duration: comment.audioDuration)
+                            }
+                        }
+                        .blur(radius: isSpoilerLocked ? 6 : 0)
+                        .opacity(isSpoilerLocked ? 0.55 : 1)
 
                         if isSpoilerLocked {
                             HStack(spacing: PollenSpacing.xSmall) {

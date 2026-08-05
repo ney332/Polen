@@ -6,6 +6,8 @@ struct ClubCommentsPreviewView: View {
     let currentUserID: UUID?
     let currentPage: Int
     @Binding var replyDrafts: [UUID: String]
+    @Binding var replyAudioData: [UUID: Data]
+    @Binding var replyAudioDurations: [UUID: TimeInterval]
     let updateAction: (Comment, String) async -> Void
     let deleteAction: (Comment) async -> Void
     let prepareReplyThreadAction: (Comment) async -> Void
@@ -26,6 +28,8 @@ struct ClubCommentsPreviewView: View {
                 replyState: replyStates[comment.id] ?? .collapsed,
                 currentUserID: currentUserID,
                 replyDraft: replyDraftBinding(for: comment.id),
+                replyAudioData: replyAudioDataBinding(for: comment.id),
+                replyAudioDuration: replyAudioDurationBinding(for: comment.id),
                 loadAction: {
                     await prepareReplyThreadAction(comment)
                 },
@@ -84,6 +88,28 @@ struct ClubCommentsPreviewView: View {
             },
             set: { newValue in
                 replyDrafts[commentID] = newValue
+            }
+        )
+    }
+
+    private func replyAudioDataBinding(for commentID: UUID) -> Binding<Data?> {
+        Binding(
+            get: {
+                replyAudioData[commentID]
+            },
+            set: { newValue in
+                replyAudioData[commentID] = newValue
+            }
+        )
+    }
+
+    private func replyAudioDurationBinding(for commentID: UUID) -> Binding<TimeInterval?> {
+        Binding(
+            get: {
+                replyAudioDurations[commentID]
+            },
+            set: { newValue in
+                replyAudioDurations[commentID] = newValue
             }
         )
     }

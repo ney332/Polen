@@ -8,6 +8,8 @@ struct Reply: Identifiable, Hashable, Sendable {
     var authorAvatarAssetName: String?
     var authorAvatarImageData: Data?
     var body: String
+    var audioData: Data?
+    var audioDuration: TimeInterval?
     var createdAt: Date
 
     init(
@@ -18,6 +20,8 @@ struct Reply: Identifiable, Hashable, Sendable {
         authorAvatarAssetName: String? = nil,
         authorAvatarImageData: Data? = nil,
         body: String,
+        audioData: Data? = nil,
+        audioDuration: TimeInterval? = nil,
         createdAt: Date = .now
     ) {
         self.id = id
@@ -27,6 +31,8 @@ struct Reply: Identifiable, Hashable, Sendable {
         self.authorAvatarAssetName = authorAvatarAssetName
         self.authorAvatarImageData = authorAvatarImageData
         self.body = body
+        self.audioData = audioData
+        self.audioDuration = audioDuration
         self.createdAt = createdAt
     }
 }

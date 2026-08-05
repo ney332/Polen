@@ -7,10 +7,10 @@ struct CreateReplyUseCase: Sendable {
         self.commentRepository = commentRepository
     }
 
-    func execute(commentID: UUID, author: UserProfile, body: String) async throws -> Reply {
+    func execute(commentID: UUID, author: UserProfile, body: String, audio: AudioAttachment?) async throws -> Reply {
         let trimmedBody = body.trimmed
 
-        guard !trimmedBody.isEmpty else {
+        guard !trimmedBody.isEmpty || audio != nil else {
             throw DomainError.emptyComment
         }
 
@@ -20,7 +20,9 @@ struct CreateReplyUseCase: Sendable {
             authorDisplayName: author.displayName,
             authorAvatarAssetName: author.avatarAssetName,
             authorAvatarImageData: author.avatarImageData,
-            body: trimmedBody
+            body: trimmedBody,
+            audioData: audio?.data,
+            audioDuration: audio?.duration
         )
 
         try await commentRepository.createReply(reply)

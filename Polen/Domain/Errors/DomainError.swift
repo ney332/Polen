@@ -8,11 +8,15 @@ enum DomainError: LocalizedError, Equatable {
     case invalidReadingProgress
     case emptyComment
     case invalidAppleCredential
+    case IsOffline
+    case icloudStorageFull
 
     var errorDescription: String? {
         switch self {
         case .unauthenticated:
             "Usuário não autenticado."
+        case .IsOffline:
+            "Verifique sua internet e tente novamente."
         case .notClubMember:
             "Apenas membros do clube podem realizar esta ação."
         case .userAlreadyHasClub:
@@ -25,6 +29,8 @@ enum DomainError: LocalizedError, Equatable {
             "O comentário não pode estar vazio."
         case .invalidAppleCredential:
             "Não foi possível validar a credencial da Apple."
+        case .icloudStorageFull:
+            "não foi possivel adicionar um livro pois seu armazenamento iCloud está cheio."
         }
     }
 }

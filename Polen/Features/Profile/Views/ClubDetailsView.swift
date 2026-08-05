@@ -234,9 +234,15 @@ private struct ArchivedCommentRowView: View {
                         .foregroundStyle(PollenColors.textSecondary)
                 }
 
-                Text(comment.body)
-                    .font(PollenTypography.body)
-                    .fixedSize(horizontal: false, vertical: true)
+                if !comment.body.isEmpty {
+                    Text(comment.body)
+                        .font(PollenTypography.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let audioData = comment.audioData {
+                    AudioPlaybackView(audioData: audioData, duration: comment.audioDuration)
+                }
 
                 Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(PollenTypography.caption)

@@ -71,6 +71,8 @@ enum CloudKitField {
         static let authorDisplayName = "authorDisplayName"
         static let authorAvatarAssetName = "authorAvatarAssetName"
         static let authorAvatarImage = "authorAvatarImage"
+        static let audioFile = "audioFile"
+        static let audioDuration = "audioDuration"
         static let body = "body"
         static let pageReference = "pageReference"
         static let createdAt = "createdAt"
@@ -82,6 +84,8 @@ enum CloudKitField {
         static let authorDisplayName = "authorDisplayName"
         static let authorAvatarAssetName = "authorAvatarAssetName"
         static let authorAvatarImage = "authorAvatarImage"
+        static let audioFile = "audioFile"
+        static let audioDuration = "audioDuration"
         static let body = "body"
         static let createdAt = "createdAt"
     }

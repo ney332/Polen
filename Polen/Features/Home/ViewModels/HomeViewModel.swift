@@ -8,8 +8,12 @@ final class HomeViewModel {
     private(set) var commentState: CommentTimelineState = .loading
     private(set) var replyStates: [UUID: ReplyThreadState] = [:]
     var newCommentBody = ""
+    var newCommentAudioData: Data?
+    var newCommentAudioDuration: TimeInterval?
     var newCommentPageText = ""
     var replyDrafts: [UUID: String] = [:]
+    var replyAudioData: [UUID: Data] = [:]
+    var replyAudioDurations: [UUID: TimeInterval] = [:]
 
     private let appState: AppState
     private let router: AppRouter
@@ -161,9 +165,12 @@ final class HomeViewModel {
                 bookID: readingProgress.bookID,
                 author: user,
                 body: newCommentBody,
+                audio: newCommentAudioAttachment,
                 pageReference: readingProgress.currentPage
             )
             newCommentBody = ""
+            newCommentAudioData = nil
+            newCommentAudioDuration = nil
             insertComment(comment)
         } catch {
             commentState = .failed(error.localizedDescription)
@@ -224,9 +231,12 @@ final class HomeViewModel {
             let reply = try await createReplyUseCase.execute(
                 commentID: comment.id,
                 author: user,
-                body: replyDrafts[comment.id] ?? ""
+                body: replyDrafts[comment.id] ?? "",
+                audio: replyAudioAttachment(for: comment.id)
             )
             replyDrafts[comment.id] = ""
+            replyAudioData[comment.id] = nil
+            replyAudioDurations[comment.id] = nil
             insertReply(reply, for: comment.id)
         } catch {
             replyStates[comment.id] = .failed(error.localizedDescription)
@@ -295,6 +305,8 @@ final class HomeViewModel {
         commentState = remainingComments.isEmpty ? .empty : .loaded(remainingComments)
         replyStates[commentID] = nil
         replyDrafts[commentID] = nil
+        replyAudioData[commentID] = nil
+        replyAudioDurations[commentID] = nil
     }
 
     private func insertReply(_ reply: Reply, for commentID: UUID) {
@@ -306,6 +318,22 @@ final class HomeViewModel {
         case .loading:
             replyStates[commentID] = .loaded([reply])
         }
+    }
+
+    private var newCommentAudioAttachment: AudioAttachment? {
+        guard let newCommentAudioData else {
+            return nil
+        }
+
+        return AudioAttachment(data: newCommentAudioData, duration: newCommentAudioDuration ?? 0)
+    }
+
+    private func replyAudioAttachment(for commentID: UUID) -> AudioAttachment? {
+        guard let data = replyAudioData[commentID] else {
+            return nil
+        }
+
+        return AudioAttachment(data: data, duration: replyAudioDurations[commentID] ?? 0)
     }
 }
 

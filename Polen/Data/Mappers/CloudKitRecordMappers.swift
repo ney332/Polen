@@ -96,6 +96,16 @@ extension CKRecord {
         } else {
             self[CloudKitField.Comment.authorAvatarImage] = nil
         }
+        if let audioData = comment.audioData {
+            self[CloudKitField.Comment.audioFile] = try? CKAsset(
+                data: audioData,
+                filenamePrefix: "polen-comment-audio-\(comment.id.uuidString)",
+                fileExtension: "m4a"
+            )
+        } else {
+            self[CloudKitField.Comment.audioFile] = nil
+        }
+        self[CloudKitField.Comment.audioDuration] = comment.audioDuration
         self[CloudKitField.Comment.body] = comment.body
         self[CloudKitField.Comment.pageReference] = comment.pageReference
         self[CloudKitField.Comment.createdAt] = comment.createdAt
@@ -115,6 +125,16 @@ extension CKRecord {
         } else {
             self[CloudKitField.Reply.authorAvatarImage] = nil
         }
+        if let audioData = reply.audioData {
+            self[CloudKitField.Reply.audioFile] = try? CKAsset(
+                data: audioData,
+                filenamePrefix: "polen-reply-audio-\(reply.id.uuidString)",
+                fileExtension: "m4a"
+            )
+        } else {
+            self[CloudKitField.Reply.audioFile] = nil
+        }
+        self[CloudKitField.Reply.audioDuration] = reply.audioDuration
         self[CloudKitField.Reply.body] = reply.body
         self[CloudKitField.Reply.createdAt] = reply.createdAt
     }
@@ -184,6 +204,8 @@ extension Comment {
     init(record: CKRecord) throws {
         let avatarAsset = record[CloudKitField.Comment.authorAvatarImage] as? CKAsset
         let avatarImageData = avatarAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
+        let audioAsset = record[CloudKitField.Comment.audioFile] as? CKAsset
+        let audioData = audioAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
 
         self.init(
             id: try record.uuid(for: CloudKitField.Shared.id),
@@ -193,7 +215,9 @@ extension Comment {
             authorDisplayName: record.optionalString(for: CloudKitField.Comment.authorDisplayName),
             authorAvatarAssetName: record.optionalString(for: CloudKitField.Comment.authorAvatarAssetName),
             authorAvatarImageData: avatarImageData,
-            body: try record.string(for: CloudKitField.Comment.body),
+            body: record.optionalString(for: CloudKitField.Comment.body) ?? "",
+            audioData: audioData,
+            audioDuration: record[CloudKitField.Comment.audioDuration] as? TimeInterval,
             pageReference: record[CloudKitField.Comment.pageReference] as? Int ?? 0,
             createdAt: try record.date(for: CloudKitField.Comment.createdAt)
         )
@@ -204,6 +228,8 @@ extension Reply {
     init(record: CKRecord) throws {
         let avatarAsset = record[CloudKitField.Reply.authorAvatarImage] as? CKAsset
         let avatarImageData = avatarAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
+        let audioAsset = record[CloudKitField.Reply.audioFile] as? CKAsset
+        let audioData = audioAsset?.fileURL.flatMap { try? Data(contentsOf: $0) }
 
         self.init(
             id: try record.uuid(for: CloudKitField.Shared.id),
@@ -212,7 +238,9 @@ extension Reply {
             authorDisplayName: record.optionalString(for: CloudKitField.Reply.authorDisplayName),
             authorAvatarAssetName: record.optionalString(for: CloudKitField.Reply.authorAvatarAssetName),
             authorAvatarImageData: avatarImageData,
-            body: try record.string(for: CloudKitField.Reply.body),
+            body: record.optionalString(for: CloudKitField.Reply.body) ?? "",
+            audioData: audioData,
+            audioDuration: record[CloudKitField.Reply.audioDuration] as? TimeInterval,
             createdAt: try record.date(for: CloudKitField.Reply.createdAt)
         )
     }
@@ -220,9 +248,13 @@ extension Reply {
 
 private extension CKAsset {
     convenience init(imageData: Data, filenamePrefix: String) throws {
+        try self.init(data: imageData, filenamePrefix: filenamePrefix, fileExtension: "jpg")
+    }
+
+    convenience init(data: Data, filenamePrefix: String, fileExtension: String) throws {
         let fileURL = FileManager.default.temporaryDirectory
-            .appending(path: "\(filenamePrefix).jpg")
-        try imageData.write(to: fileURL, options: [.atomic])
+            .appending(path: "\(filenamePrefix).\(fileExtension)")
+        try data.write(to: fileURL, options: [.atomic])
         self.init(fileURL: fileURL)
     }
 }

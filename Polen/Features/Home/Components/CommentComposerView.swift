@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CommentComposerView: View {
     @Binding var bodyText: String
+    @Binding var audioData: Data?
+    @Binding var audioDuration: TimeInterval?
     @Binding var pageText: String
     let currentPage: Int
     let createAction: () async -> Void
@@ -22,6 +24,8 @@ struct CommentComposerView: View {
                 .lineLimit(3...5)
                 .textFieldStyle(.roundedBorder)
 
+            AudioRecorderView(audioData: $audioData, audioDuration: $audioDuration)
+
             Button {
                 Task {
                     isCreating = true
@@ -33,7 +37,7 @@ struct CommentComposerView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(isCreating || bodyText.trimmed.isEmpty)
+            .disabled(isCreating || (bodyText.trimmed.isEmpty && audioData == nil))
         }
         .onAppear {
             if pageText.isEmpty {

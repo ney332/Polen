@@ -5,6 +5,8 @@ struct CommentThreadChatView: View {
     let replyState: ReplyThreadState
     let currentUserID: UUID?
     @Binding var replyDraft: String
+    @Binding var replyAudioData: Data?
+    @Binding var replyAudioDuration: TimeInterval?
     let loadAction: () async -> Void
     let createReplyAction: () async -> Void
 
@@ -26,10 +28,16 @@ struct CommentThreadChatView: View {
                             .font(PollenTypography.caption)
                             .foregroundStyle(PollenColors.primary)
 
-                        Text(comment.body)
-                            .font(PollenTypography.body)
-                            .foregroundStyle(PollenColors.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        if !comment.body.isEmpty {
+                            Text(comment.body)
+                                .font(PollenTypography.body)
+                                .foregroundStyle(PollenColors.textPrimary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        if let audioData = comment.audioData {
+                            AudioPlaybackView(audioData: audioData, duration: comment.audioDuration)
+                        }
 
                         Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened))
                             .font(PollenTypography.caption)
@@ -52,6 +60,8 @@ struct CommentThreadChatView: View {
         .safeAreaInset(edge: .bottom) {
             ReplyComposerView(
                 bodyText: $replyDraft,
+                audioData: $replyAudioData,
+                audioDuration: $replyAudioDuration,
                 createAction: createReplyAction
             )
             .padding(PollenSpacing.medium)
@@ -115,10 +125,16 @@ private struct ReplyMessageBubbleView: View {
                         .foregroundStyle(PollenColors.primary)
                 }
 
-                Text(reply.body)
-                    .font(PollenTypography.body)
-                    .foregroundStyle(PollenColors.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if !reply.body.isEmpty {
+                    Text(reply.body)
+                        .font(PollenTypography.body)
+                        .foregroundStyle(PollenColors.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let audioData = reply.audioData {
+                    AudioPlaybackView(audioData: audioData, duration: reply.audioDuration)
+                }
 
                 Text(reply.createdAt.formatted(date: .abbreviated, time: .shortened))
                     .font(PollenTypography.caption)

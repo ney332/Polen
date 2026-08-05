@@ -9,6 +9,8 @@ struct Comment: Identifiable, Hashable, Sendable {
     var authorAvatarAssetName: String?
     var authorAvatarImageData: Data?
     var body: String
+    var audioData: Data?
+    var audioDuration: TimeInterval?
     var pageReference: Int
     var createdAt: Date
 
@@ -21,6 +23,8 @@ struct Comment: Identifiable, Hashable, Sendable {
         authorAvatarAssetName: String? = nil,
         authorAvatarImageData: Data? = nil,
         body: String,
+        audioData: Data? = nil,
+        audioDuration: TimeInterval? = nil,
         pageReference: Int,
         createdAt: Date = .now
     ) {
@@ -32,6 +36,8 @@ struct Comment: Identifiable, Hashable, Sendable {
         self.authorAvatarAssetName = authorAvatarAssetName
         self.authorAvatarImageData = authorAvatarImageData
         self.body = body
+        self.audioData = audioData
+        self.audioDuration = audioDuration
         self.pageReference = max(0, pageReference)
         self.createdAt = createdAt
     }
